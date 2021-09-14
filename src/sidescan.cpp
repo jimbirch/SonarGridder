@@ -125,7 +125,7 @@ bool generateSideScanCSV(unsigned char* sonData, unsigned int* lineStarts, int l
 		int32_t direction = decodeDirection(line, HEADINGLOC);
 		int32_t depth = decodeDepth(line, DEPTHLOC) * 100;
 		distanceAcrossTrack(distance, lineLen, depth);
-		for(int j = 0; j < lineLen; j++) {
+		for(int j = HEADERLEN + depth/SAMPLESPERMETER; j < lineLen; j++) {
 			pointLocation(distance[j], xy, (double)direction/10.0, northing, easting, port);
 			double longi = longitude(xy[1]);
 			double lat = latitude(xy[0]);

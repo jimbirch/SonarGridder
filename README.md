@@ -17,11 +17,15 @@ This software is a hobby project that I've made available under the GNU GPL vers
 Please send bug reports, patches, help requests, fan letters, and/or angry rants to jim [@t] jdbirch.com.
 
 #################################################################################################################
+#################################################################################################################
+#################################################################################################################
 
 Some notes on how this software works:
 
 My study involved surveying an inland waterway with a Humminbird 598ci HD fishfinder. This unit was chosen largely because it is side scanning (side imaging to borrow the manufacturer's parlance) and was the smallest available unit at the time (it was often portaged or run through rapids on a canoe or small aluminum boat, weight mattered). Depth and range are calculated in this unit using data hard-coded into the firmware allowing the user to select seawater or fresh water. The speed of sound for fresh water used by the manufacturer is (I believe) 1436 m/s. Per the manufacturer's specifications, the true RMS power output is 500 watts and the transducer package contains 2 455 khz "side-imaging" transducers (one per side), 1 200 khz high resolution "down-imaging" transducer, and 1 83 khz traditional fish finder transducer. I have configured this software to work with this specific unit in fresh water, but will include documentation on how to change these values at the end of this file.
 
+#################################################################################################################
+#################################################################################################################
 #################################################################################################################
 
 Using:
@@ -94,10 +98,14 @@ Suggested workflow:
     sonargridder B003.SON starboard -nopath -a 100 -max 200
 
 #################################################################################################################
+#################################################################################################################
+#################################################################################################################
 
-Building:
+Compiling:
 
-  Pre-requisites: This code requires only libtiff. If it is not installed, please install it first. In ubuntu:
+  Instructions are provided for gnu-linux based systems. If you know how to do this in Windows or MacOS, please let me know.
+
+  Pre-requisites: This code requires the standard C++ libraries and libTIFF. If libTIFF is not installed, please install it first. In ubuntu:
     sudo apt-get install libtiff-dev
     
   1. Download the repository.

@@ -117,3 +117,24 @@ Installing:
 
   
   Alternatively alternatively add the bin folder from the repository to your PATH variable.
+  
+  
+Changing SONAR parameters:
+All parameters relevant to the analysis being done are provided as macros in the header file (songridder.h). Change these before compiling the software to change how the analysis is done. I have divided the macros into three sections consisting of physical constraints, properties of the down imaging transducer (this is only important for the extremely experimental E1 and E2 analysis included that I have not yet documented), and properties of the file.
+
+To change to seawater:
+
+The unit's firmware uses the speed of sound to calculate the depth and range, and has one of two values built in depending on whether the user specified that the unit is being used in fresh water or sea water. I believe these values are 1463 m/s in fresh water and 1500 m/s in seawater (but don't quote me on that). This results in a 2.5% difference between distances calculated in fresh water and those in seawater. Since we rely on the flat bottom assumption and make a lot of spatial compromises here, you can probably get close enough in seawater to the distances for fresh water the default configuration provides. You can also change it.
+
+To change the software to seawater, SOUNDSPEED and SAMPLESPERMETER must be changed. The speed of sound used in fresh water is 1463 (m/s). I believe Humminbird uses 1500 (m/s) as the speed of sound in seawater (again, don't quote me on that). SAMPLESPERMETER corrects the sampling frequency to the distance and is defined as one over the length of each sample in seconds times the speed of sound (or the sampling rate in Hz divided by the speed of sound). Since the sampling frequency (likely constrained by some DAC on the device's mainboard) is undocumented, I determined this by taking the number of samples in a given line and dividing it by the specified range in my transect (50 m) to get 54.4245. This corresponds to a sampling rate of ~79.6 kHz (79623.0435 Hz) or a sample length of 12.56 μs (0.000012559 s). In seawater (1500 m/s) SAMPLESPERMETER would be 53.08278.
+
+Changing to a non-firmware-specified speed of sound is beyond the scope of this how-to, but can likely be accomplished by changing the SAMPLESPERMETER macro definition to what would be correct for the waterbody you are working in and adjusting the depth prior to using it in any of the functions. Depth would be adjusted as follows: 
+
+  Dc = (D1 * Fs / C1) / (Fs / C2)
+  
+  Where D1 is the depth reported by the unit, C1 is the speed of sound used by the unit, C2 is the actual speed of sound, and Dc is the corrected depth.
+
+
+To change to a different unit:
+
+Humminbird's SON files, to my knowledge, are all laid out in the same basic structure. They are binary files that are appended to every time the unit scans. Each record (here referred to as a line) starts with a start sequence (in this unit 0xC0DE21), followed by a short header containing information about the scan (position in world mercator meters, depth, heading, number of records in the line, etc) and then a long string of bytes containing the return strength. The header information and unit specs may vary from unit to unit (I expect this structure is common to units within generations, mine is a ~2014 Humminbird 598ci HD combo). The relevant information in the header macros is the location of the sentence length (unsigned, 32 bit; LENPOS), the location of the world mercator northing value (signed 32 bit; NORTHINGLOC), the location of the world mercator easting value (signed 32 bit; EASTINGLOC), the location of the depth (unsigned 32 bit, decimeters; DEPTHLOC), sentence length (unsigned 32 bit; LENLOC), heading (unsigned 16 bit, tenths of a degree; HEADINGLOC), and the length of the ping header in bytes (including start sequence; HEADINGLOC). 

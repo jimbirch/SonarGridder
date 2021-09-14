@@ -42,6 +42,8 @@
 // Physical constraints
 #define SOUNDSPEED 1463
 #define PI 3.141592654
+#define SAMPLESPERMETER 54.4245
+
 // Physical properties of the down imaging transducer
 #define FREQUENCY 200000
 #define NEARFIELDRANGE 0.05433008
@@ -52,10 +54,10 @@
 #define ALPHA -43.036983702
 #define RETURNSTRENCOEFF 0.00761384
 #define MAXW 500
-#define SAMPLESPERMETER 54.4245
 #define ARRAYLENGTH 0.039872
 #define PINGDURATION 0.000085
 #define WAVENUMBER 858.945359945
+
 // File properties
 #define LENPOS 62
 #define NORTHINGLOC 20

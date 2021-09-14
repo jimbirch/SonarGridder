@@ -137,4 +137,36 @@ Changing to a non-firmware-specified speed of sound is beyond the scope of this 
 
 To change to a different unit:
 
-Humminbird's SON files, to my knowledge, are all laid out in the same basic structure. They are binary files that are appended to every time the unit scans. Each record (here referred to as a line) starts with a start sequence (in this unit 0xC0DE21), followed by a short header containing information about the scan (position in world mercator meters, depth, heading, number of records in the line, etc) and then a long string of bytes containing the return strength. The header information and unit specs may vary from unit to unit (I expect this structure is common to units within generations, mine is a ~2014 Humminbird 598ci HD combo). The relevant information in the header macros is the location of the sentence length (unsigned, 32 bit; LENPOS), the location of the world mercator northing value (signed 32 bit; NORTHINGLOC), the location of the world mercator easting value (signed 32 bit; EASTINGLOC), the location of the depth (unsigned 32 bit, decimeters; DEPTHLOC), sentence length (unsigned 32 bit; LENLOC), heading (unsigned 16 bit, tenths of a degree; HEADINGLOC), and the length of the ping header in bytes (including start sequence; HEADINGLOC). 
+Humminbird's SON files, to my knowledge, are all laid out in the same basic structure. They are binary files that are appended to every time the unit scans. Each record (here referred to as a line) begins with a start sequence (in this unit 0xC0DE21), followed by a short header containing information about the scan (position in world mercator meters, depth, heading, number of records in the line, etc) and then a long string of bytes containing the return strength. The header information and unit specs may vary from unit to unit (I expect this structure is common to units within generations, mine is a ~2014 Humminbird 598ci HD combo). The relevant information in the header macros is the location of the sentence length (unsigned, 32 bit; LENPOS), the location of the world mercator northing value (signed 32 bit; NORTHINGLOC), the location of the world mercator easting value (signed 32 bit; EASTINGLOC), the location of the depth (unsigned 32 bit, decimeters; DEPTHLOC), sentence length (unsigned 32 bit; LENLOC), heading (unsigned 16 bit, tenths of a degree; HEADINGLOC), and the length of the ping header in bytes (including start sequence; HEADINGLOC). 
+
+To determine the structure of your particular unit's files, load one up in a hex editor (side imaging may differ in structure from down imaging, so use B002.SON or B003.SON). If your hex editor can indicate multibyte integers, make sure it's configured for big endian. Unsigned values are 2's compliment. The start sequence will be the first four bytes (if this is not 0xC0DEAB21, you will need to change parts of the code in fileprocessing.cpp). 
+
+LENPOS: 
+1. Search for the second occurance of the start sequence and record the offset of the first byte. 
+2. Sentence length for the first line will be S = Oe - H where Oe is the end of the first line (the offset of beginning of the second line minus 1) and H is the header length. 
+3. Since we don't know the header length yet, search for a number similar to the second offset minus 1, record its offset. This is LENPOS.
+
+HEADERLEN:
+1. The header length should be (but sometimes is not) the length of the line (the offset of the second occurance of the start sequence minus one) minus the sentence length. In this generation of unit it is 67.
+2. Check the byte prior to the offset of the calculated header length for the scan start byte. On this unit the scan start byte is 0x21. Also check the offset of the line start sequence + the offset of the scan start byte elsewhere in the file to make sure this remains the same.
+3. If these conditions are met, you have determined HEADERLEN.
+
+EASTINGLOC:
+1. This value is harder to identify, and it's extremely helpful to know the world mercator location of a scan (although for some reason this is not identical to EPSG:3395 (may be EPSG:3857). Look for a signed 32 bit integer corresponding to something that seems reasonable. Also try scans other than the first scan as this is dependent on the GPS being warmed up.
+2. On my unit the byte prior to the easting value is always 0x82.
+3. Record the offset if you found it as EASTINGLOC.
+
+NORTHINGLOC:
+1. On my unit this is separated from the bytes corresponding to EASTINGLOC by a spacer byte (0x83). Check the offset at EASTINGLOC + 5 to see if the offset contains a signed 32 bit integer that seems reasonable for a northing value in world mercator units. Otherwise, check other locations in the header. Also check scans other than the first given that the GPS needs to warm up.
+2. Record the offset if you found it as NORTHINGLOC.
+
+DEPTHLOC:
+1. If you wrote down the depth when you started recording you are already halfway there. Multiply the recorded depth (in metres) by 10 to get the depth in decimetres.
+2. Look for an unsigned 32 bit integer representing the depth (or something similar; or if you don't know the depth, something that seems reasonable) in decimetres (tenths of a metre).
+3. Record this offset as DEPTHLOC.
+
+HEADINGLOC:
+1. Look for an unsigned 16 bit integer that seems reasonable for a heading in tenths of a degree (should be a value between 0 and 3599 at every corresponding offset in the file). It might be tempting to use the northing and easting values to calculate this, but keep in mind that these are rounded to the nearest metre and the pings are frequent, you may need to skip a few scans to get an accurate idea of heading).
+2. Record this offset as HEADINGLOC.
+
+If you've gone through the binary file successfully, congratulations! Save and recompile the program (make clean && make). If LENPOS is incorrect, the program will segfault while running. If EASTINGLOC or NORTHINGLOC are wrong, positions will be nonsensical. If DEPTHLOC is wrong, recorded depths will be nonsensical as will cross-track distances (If range is ~50 m, the TIFF files should be at most 50 m wide). If HEADINGLOC is wrong, the program may divide the track in weird ways (eg skipping turns or fragmenting the course in weird places).

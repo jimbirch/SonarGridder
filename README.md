@@ -7,7 +7,7 @@ The approach is to divide the boat's track into segments where the heading is re
 
 This software is a hobby project that I've made available under the GNU GPL version 2.0. It is provided WITHOUT WARRANTY and is probably absolutely loaded with potentially dangerous bugs (I am a biologist after all). Feel free to copy, distribute, or modify the code to your own ends under the terms of the version 2.0 of the GNU GPL. Please see the attached LICENSE file for more information. If you use this software in your own work, please consider dropping me a citation!
 
-Please send bug reports, help requests, fan letters, and/or hatemail to jim [@t] jdbirch.com.
+Please send bug reports, patches, help requests, fan letters, and/or angry rants to jim [@t] jdbirch.com.
 
 #################################################################################################################
 

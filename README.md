@@ -1,13 +1,18 @@
 # SonarGridder
+© 2021 Angular Fish
+
 A C++ program for simple georeferencing of Humminbird side scan sonar files. Intended for visual substrate classification using side scan sonar records and a GIS program of your choice. Outputs (regular) TIFF files with world files indicating how to stretch and rotate them onto the map. Corrects cross-track distance and poor gps resolution. Tested with the Humminbird 598ci HD, will likely work with other units of the same generation but may require some modification to the header to adjust the sonar header length and the offsets of particular important sonar header values. TIFF files import into QGIS without difficulty, I have not tested them with any other software.
 
 The approach is to divide the boat's track into segments where the heading is relatively constant, correct the across track distances, write a TIFF file containing the data within each segment, and then write a world file (TFW) describing how to stretch and rotate the image to a map. This approach improves legibility over gridding methods dependent on (GPS-derived) boat heading and radiometric correction at the expense of some spatial accuracy.
 
 This software is a hobby project that I've made available under the GNU GPL version 2.0. It is provided WITHOUT WARRANTY and is probably absolutely loaded with potentially dangerous bugs (I am a biologist after all). Feel free to copy, distribute, or modify the code to your own ends under the terms of the version 2.0 of the GNU GPL. Please see the attached LICENSE file for more information. If you use this software in your own work, please consider dropping me a citation!
 
+Please send bug reports, help requests, fan letters, and/or hatemail to jim [@t] jdbirch.com.
+
 #################################################################################################################
 
 Some notes on how this software works:
+
 My study involved surveying an inland waterway with a Humminbird 598ci HD fishfinder. This unit was chosen largely because it is side scanning (side imaging to borrow the manufacturer's parlance) and was the smallest available unit at the time (it was often portaged or run through rapids on a canoe or small aluminum boat, weight mattered). Depth and range are calculated in this unit using data hard-coded into the firmware allowing the user to select seawater or fresh water. The speed of sound for fresh water used by the manufacturer is (I believe) 1436 m/s. Per the manufacturer's specifications, the true RMS power output is 500 watts and the transducer package contains 2 455 khz "side-imaging" transducers (one per side), 1 200 khz high resolution "down-imaging" transducer, and 1 83 khz traditional fish finder transducer. I have configured this software to work with this specific unit in fresh water, but will include documentation on how to change these values at the end of this file.
 
 #################################################################################################################
@@ -152,9 +157,9 @@ Once these changes have been made, recompile the program (make clean && make).
 
 #################################################################################################################
 
-To change to a different unit:
+To change to a different (Humminbird side-imaging) unit:
 
-BRAVE SOUL: This is possible. Very doable even. You will need a hex editor (I use ghex, others are probably fine) and recordings from your particular device. I would first check to see if the offsets built in for this unit work (I have only tested it with a Humminbird 598ci HD combo, but it may work with more ~2014 x98ci HD Combo units). If that fails, your procedure follows.
+BRAVE SOUL: This is likely possible. Very doable even. You will need a hex editor (I use ghex, others are probably fine) and recordings from your particular device. I would first check to see if the offsets built in for this unit work (I have only tested it with a Humminbird 598ci HD combo, but it may work with more ~2014 x98ci HD Combo units). If that fails, your procedure follows.
 
 Humminbird's SON files, to my knowledge, are all laid out in the same basic structure. They are binary files that are appended to every time the unit scans. Each record (here referred to as a line) begins with a start sequence (in this unit 0xC0DE21), followed by a short header containing information about the scan (position in world mercator meters, depth, heading, number of records in the line, etc) and then a long string of bytes containing the return strength. The header information and unit specs may vary from unit to unit (I expect this structure is common to units within generations, mine is a ~2014 Humminbird 598ci HD combo). The relevant information in the header macros is the location of the sentence length (unsigned, 32 bit; LENPOS), the location of the world mercator northing value (signed 32 bit; NORTHINGLOC), the location of the world mercator easting value (signed 32 bit; EASTINGLOC), the location of the depth (unsigned 32 bit, decimeters; DEPTHLOC), sentence length (unsigned 32 bit; LENLOC), heading (unsigned 16 bit, tenths of a degree; HEADINGLOC), and the length of the ping header in bytes (including start sequence; HEADINGLOC). 
 

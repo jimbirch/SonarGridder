@@ -21,11 +21,6 @@
 		structure is the same between units, but the header lengths and locations
 		of metadata in the binary file may differ. Specs such as frequency and
 		wattage may also differ.
-		This program is set up to work with files produced by the Humminbird 598ci HD
-		side imaging fishfinder (because that's what I have). The basic file
-		structure is the same between units, but the header lengths and locations
-		of metadata in the binary file may differ. Specs such as frequency and
-		wattage may also differ.
 
 */
 

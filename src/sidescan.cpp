@@ -25,9 +25,9 @@
 void breakOnNoPosition (unsigned char* sonIn, bool* breaks, int lineCount) {
 // Updates the break point matrix to add scans that don't have a corresponding location.
 // This can happen if the GPS has no fix.
-	unsigned int eastingPos = 15;
-	unsigned int northingPos = 20;
-	unsigned int lenPos = 62;
+	unsigned int eastingPos = EASTINGLOC;
+	unsigned int northingPos = NORTHINGLOC;
+	unsigned int lenPos = LENLOC;
 	uint32_t lineLen = 0;
 	for(int i = 0; i < lineCount; i++) {
 		lineLen = decodeInteger(sonIn[lenPos], sonIn[lenPos + 1],
@@ -48,9 +48,9 @@ void breakOnDirectionChange (unsigned char* sonIn, bool* breaks, int lineCount,
 														 unsigned int directionChange) {
 // Updates the break point matrix to add scans where the direction changes, this prevents
 // Overlapping data.
-	unsigned int lenPos = 62;
+	unsigned int lenPos = LENLOC;
 	unsigned int lineLen = 0;
-	unsigned int directionPos = 27;
+	unsigned int directionPos = HEADINGLOC;
 	uint32_t direction = 0;
 	uint32_t initialDirection = 0;
 	for(int i = 0; i < lineCount; i++) {
@@ -85,36 +85,36 @@ void breakOnMaxLines (bool* breaks, int lineCount, int maxLines) {
 void distanceAcrossTrack(int* distance, unsigned int lineLen, unsigned int depth) {
 // Gets the across track distance for each reading in milimeters.
 	for(unsigned int i = 0; i < lineLen; i++) {
-		unsigned int pingDist = (i - HEADERLEN) * SAMPLESPERMETER;
-		if(pingDist < depth + (SAMPLESPERMETER * HEADERLEN)) distance[i] = 0;
-		else {
-			double dist = sqrt(pow(pingDist,2) - pow(depth,2));
-			distance[i] = int(dist);
+		if(i < HEADERLEN) {
+			distance[i] = 0;
+		} else {
+			unsigned int pingDist = (i - HEADERLEN) / SAMPLESPERMETER;
+			if(pingDist < depth + (HEADERLEN/SAMPLESPERMETER)) distance[i] = 0;
+			else {
+				double dist = sqrt(pow(pingDist,2) - pow(depth,2));
+				distance[i] = int(dist);
+			}
 		}
 	}
 }
 
 bool generateSideScanCSV(unsigned char* sonData, unsigned int* lineStarts, int lineLen, 
 								int startLine, int endLine, bool port) {
-	// Generates a CSV file containing the coordinates of each sample.
+	// Generates a CSV file containing the coordinates and return strength of each sample.
 	if(startLine + 1 == endLine) return false;
 	string side = "Starboard";
 	if(port) side = "Port";
 	ofstream csv(side + "_lines" + to_string(startLine) + "to" + to_string(endLine) + ".csv");
 	if(!csv.is_open()) return false;
 	csv.precision(11);
-	int northingPos = 20;
-	int eastingPos = 15;
-	int directionPos = 27;
-	int depthPos = 35;
 	double startLocs[2][2];
 	unsigned char* line = new unsigned char[lineLen];
 	int* distance = new int[lineLen];
 	double* xy = new double[2];
-	startLocs[0][0] = decodeUTM(sonData,lineStarts[startLine] + northingPos);
-	startLocs[0][1] = decodeUTM(sonData,lineStarts[startLine] + eastingPos);
-	startLocs[1][0] = decodeUTM(sonData,lineStarts[endLine] + northingPos);
-	startLocs[1][1] = decodeUTM(sonData,lineStarts[endLine] + eastingPos);
+	startLocs[0][0] = decodeUTM(sonData,lineStarts[startLine] + NORTHINGLOC);
+	startLocs[0][1] = decodeUTM(sonData,lineStarts[startLine] + EASTINGLOC);
+	startLocs[1][0] = decodeUTM(sonData,lineStarts[endLine] + NORTHINGLOC);
+	startLocs[1][1] = decodeUTM(sonData,lineStarts[endLine] + EASTINGLOC);
 	double slopeNorth = (startLocs[1][0] - startLocs[0][0])/(endLine - startLine);
 	double slopeEast = (startLocs[1][1] - startLocs[0][1])/(endLine - startLine);
 	csv << "LineNo,Depth(mm),SigStren,latitude,longitude,distance\n";
@@ -122,8 +122,8 @@ bool generateSideScanCSV(unsigned char* sonData, unsigned int* lineStarts, int l
 		getLine(sonData, line, lineStarts[i], lineStarts[i+1]);
 		double northing = startLocs[0][0] + slopeNorth * (i - startLine);
 		double easting = startLocs[0][1] + slopeEast * (i - startLine);
-		int32_t direction = decodeDirection(line, directionPos);
-		int32_t depth = decodeDepth(line, depthPos) * 100;
+		int32_t direction = decodeDirection(line, HEADINGLOC);
+		int32_t depth = decodeDepth(line, DEPTHLOC) * 100;
 		distanceAcrossTrack(distance, lineLen, depth);
 		for(int j = 0; j < lineLen; j++) {
 			pointLocation(distance[j], xy, (double)direction/10.0, northing, easting, port);
@@ -147,7 +147,7 @@ bool generateSideScanCSV(unsigned char* sonData, unsigned int* lineStarts, int l
 
 bool generateTIFF(unsigned char* sonData, unsigned int* lineStarts, int lineLen, 
 								int startLine, int endLine, bool port, int minSize) {
-	// Generates a tiff file containing the coordinates of each sample.
+	// Generates a tiff file and georeferences it using a world file.
 	if(startLine >= endLine - minSize) return false;
 	string side = "Starboard";
 	if(port) side = "Port";
@@ -160,12 +160,9 @@ bool generateTIFF(unsigned char* sonData, unsigned int* lineStarts, int lineLen,
 	strcpy(filenameArray, filename.c_str());
 	TIFF *out = TIFFOpen(filenameArray,"w");
 	delete[] filenameArray;
-	int northingPos = 20;
-	int eastingPos = 15;
-	int depthPos = 35;
 	uint32_t minDepth = 0xFFFF;
 	for (int i = startLine; i < endLine; i++) {
-		uint32_t lineDepth = decodeDepth(sonData, lineStarts[i] + depthPos);
+		uint32_t lineDepth = decodeDepth(sonData, lineStarts[i] + DEPTHLOC);
 		if(lineDepth < minDepth) minDepth=lineDepth;
 	}
 	minDepth *= 100;
@@ -185,17 +182,17 @@ bool generateTIFF(unsigned char* sonData, unsigned int* lineStarts, int lineLen,
 	
 	for(int i = startLine; i < endLine; i++) {
 		getLine(sonData, line, lineStarts[i], lineStarts[i+1]);
-		uint32_t depth = decodeDepth(line, depthPos) * 100;
+		uint32_t depth = decodeDepth(line, DEPTHLOC) * 100;
 		uint32_t currLineLen = lineStarts[i+1] - lineStarts[i];
 		unsigned int currLinePos = int(depth / 19) + HEADERLEN;
 		if(currLinePos >= currLineLen) continue;
 		distanceAcrossTrack(distance, lineLen, depth);
 		for(int j = 0; j < tiffLineLen; j++) {
-			if(j > maxDist/19) { 
+			if(j > HEADERLEN + maxDist/19) { 
 				tiffLine[j] = 0;
 				continue;
 			} 
-			else if(distance[currLinePos] > j * 19) {
+			else if(distance[currLinePos] > HEADERLEN + j * 19) {
 				tiffLine[j] = line[currLinePos];
 			}
 			else {
@@ -232,12 +229,12 @@ bool generateTIFF(unsigned char* sonData, unsigned int* lineStarts, int lineLen,
 	double* bottomRight { new double[2] };
 
 	// Find the location of the boat at the top left of our raster
-	topLeft[0] = decodeUTM(sonData, lineStarts[startLine] + northingPos);
-	topLeft[1] = decodeUTM(sonData, lineStarts[startLine] + eastingPos);
+	topLeft[0] = decodeUTM(sonData, lineStarts[startLine] + NORTHINGLOC);
+	topLeft[1] = decodeUTM(sonData, lineStarts[startLine] + EASTINGLOC);
 
 	// Find the location of the boat at the bottom (left) of our raster
-	bottomRight[0] = decodeUTM(sonData, lineStarts[endLine-1] + northingPos);
-	bottomRight[1] = decodeUTM(sonData, lineStarts[endLine-1] + eastingPos);
+	bottomRight[0] = decodeUTM(sonData, lineStarts[endLine-1] + NORTHINGLOC);
+	bottomRight[1] = decodeUTM(sonData, lineStarts[endLine-1] + EASTINGLOC);
 
 	// Determine the direction the boat was heading (so we can rotate)
 	double direction = atan2((latitude(topLeft[0])-latitude(bottomRight[0])),
@@ -318,9 +315,9 @@ bool boatPathCSV(unsigned char* sonData, unsigned int* lineStarts, int count) {
 	csv.precision(20);
 	csv << "Number,Latitude,Longitude,Depth\n";
 	for(int i = 0; i < count; i++) {
-		int easting = decodeUTM(sonData, lineStarts[i] + 15);
-		int northing = decodeUTM(sonData, lineStarts[i] + 20);
-		float depth = decodeUTM(sonData, lineStarts[i] + 35)/10;
+		int easting = decodeUTM(sonData, lineStarts[i] + EASTINGLOC);
+		int northing = decodeUTM(sonData, lineStarts[i] + NORTHINGLOC);
+		float depth = decodeUTM(sonData, lineStarts[i] + DEPTHLOC)/10;
 		double lat = latitude(northing);
 		double lon = longitude(easting);
 		csv << i << "," << lat << "," << lon << "," << depth << "\n";

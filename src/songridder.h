@@ -58,6 +58,7 @@
 #define DEPTHLOC 35
 #define HEADERLEN 67
 #define LENLOC 62
+#define HEADINGLOC 27
 
 using namespace std;
 // File processing functions

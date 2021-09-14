@@ -14,21 +14,21 @@ This software is a hobby project that I've made available under the GNU GPL vers
   Jim Birch (2021). SonarGridder: A utility for georeferencing commercial side-scan sonar files. JDBirch.com. URL https://www.jdbirch.com/.
   
 
-#################################################################################################################
+#########################################################################################################
 
 Please send bug reports, patches, help requests, suggestions, comments on how terrible my code is, fan letters, and/or angry rants to jim [@t] jdbirch.com.
 
-#################################################################################################################
-#################################################################################################################
-#################################################################################################################
+#########################################################################################################
+#########################################################################################################
+#########################################################################################################
 
 Some notes on how this software works:
 
 My study involved surveying an inland waterway with a Humminbird 598ci HD fishfinder. This unit was chosen largely because it is side scanning (side imaging to borrow the manufacturer's parlance) and was the smallest available unit at the time (it was often portaged or run through rapids on a canoe or small aluminum boat, weight mattered). Depth and range are calculated in this unit using data hard-coded into the firmware allowing the user to select seawater or fresh water. The speed of sound for fresh water used by the manufacturer is (I believe) 1436 m/s. Per the manufacturer's specifications, the true RMS power output is 500 watts and the transducer package contains 2 455 khz "side-imaging" transducers (one per side), 1 200 khz high resolution "down-imaging" transducer, and 1 83 khz traditional fish finder transducer. I have configured this software to work with this specific unit in fresh water, but will include documentation on how to change these values at the end of this file.
 
-#################################################################################################################
-#################################################################################################################
-#################################################################################################################
+#########################################################################################################
+#########################################################################################################
+#########################################################################################################
 
 Using:
 
@@ -88,20 +88,20 @@ Outputs:
   
     A csv file containing the latitude and longitude of each scan, as well as the depth.
     
-#################################################################################################################
+#########################################################################################################
 
 Suggested workflow:
 
   Managing files will be easier if you create a new folder for the program's output. For example:
   
-    mkdir Lake\ Superior\ Transect\ 1\ Starboard
-    cd Lake\ Superior\ Transect\ 1\ Starboard
+    mkdir LakeSuperiorTransect01Starboard
+    cd LakeSuperiorTransect01Starboard
     cp ../B003.SON ./
     sonargridder B003.SON starboard -nopath -a 100 -max 200
 
-#################################################################################################################
-#################################################################################################################
-#################################################################################################################
+#########################################################################################################
+#########################################################################################################
+#########################################################################################################
 
 Compiling:
 
@@ -128,7 +128,7 @@ Compiling:
   
   The program will be output to ../bin
 
-#################################################################################################################
+#########################################################################################################
 
 Installing:
 
@@ -148,9 +148,9 @@ Installing:
   
   Alternatively alternatively add the bin folder from the repository to your PATH variable.
   
-#################################################################################################################
-#################################################################################################################
-#################################################################################################################
+#########################################################################################################
+#########################################################################################################
+#########################################################################################################
 
 Opening files in QGIS:
 
@@ -180,15 +180,15 @@ shipPath.csv is extremely useful for identifying the start and end lines of each
 
 Happy classifying!
   
-#################################################################################################################
-#################################################################################################################
-#################################################################################################################
+#########################################################################################################
+#########################################################################################################
+#########################################################################################################
 
 Changing SONAR parameters:
 
 All parameters relevant to the analysis being done are provided as macros in the header file (songridder.h). Change these before compiling the software to change how the analysis is done. I have divided the macros into three sections consisting of physical constraints, properties of the down imaging transducer (this is only important for the extremely experimental E1 and E2 analysis included that I have not yet documented), and properties of the file.
 
-#################################################################################################################
+#########################################################################################################
 
 To change to seawater:
 
@@ -210,7 +210,7 @@ Changing to a non-firmware-specified speed of sound is beyond the scope of this 
   
 Once these changes have been made, recompile the program (make clean && make).
 
-#################################################################################################################
+#########################################################################################################
 
 To change to a different (Humminbird side-imaging) unit:
 

@@ -190,7 +190,13 @@ Changing to a non-firmware-specified speed of sound is beyond the scope of this 
 
   Dc = (D1 * Fs / C1) / (Fs / C2)
   
-  Where D1 is the depth reported by the unit, C1 is the speed of sound used by the unit, C2 is the actual speed of sound, and Dc is the corrected depth.
+  Where D1 is the depth reported by the unit, C1 is the speed of sound used by the unit, C2 is the actual speed of sound, Fs is the sampling frequency and Dc is the corrected depth.
+  
+  OR:
+  
+  Dc = D1 * S1 / SAMPLESPERMETER
+  
+  Where S1 is the SAMPLESPERMETER value corresponding with how the unit was configured by the operator. If seawater was selected, 53.0828; if fresh water was selected, 54.4245.
   
 Once these changes have been made, recompile the program (make clean && make).
 

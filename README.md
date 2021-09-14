@@ -5,7 +5,14 @@ A C++ program for simple georeferencing of Humminbird side scan sonar files. Int
 
 The approach is to divide the boat's track into segments where the heading is relatively constant, correct the across track distances, write a TIFF file containing the data within each segment, and then write a world file (TFW) describing how to stretch and rotate the image to a map. This approach improves legibility over gridding methods dependent on (GPS-derived) boat heading and radiometric correction at the expense of some spatial accuracy.
 
-This software is a hobby project that I've made available under the GNU GPL version 2.0. It is provided WITHOUT WARRANTY and is probably absolutely loaded with potentially dangerous bugs (I am a biologist after all). Feel free to copy, distribute, or modify the code to your own ends under the terms of the version 2.0 of the GNU GPL. Please see the attached LICENSE file for more information. If you use this software in your own work, please consider dropping me a citation!
+This software is a hobby project that I've made available under the GNU GPL version 2.0. It is provided WITHOUT WARRANTY and is probably absolutely loaded with potentially dangerous bugs (I am a biologist after all). Feel free to copy, distribute, or modify the code to your own ends under the terms of the version 2.0 of the GNU GPL. Please see the attached LICENSE file for more information. If you use this software in your own work, please drop me a citation:
+
+  Angular Fish (2021). SonarGridder: A utility for georeferencing commercial side-scan sonar files. AngularFish.net. URL https://www.angularfish.net/.
+  
+  -Or-
+  
+  Jim Birch (2020). SonarGridder: A utility for georeferencing commercial side-scan sonar files. JDBirch.com. URL https://www.jdbirch.com/.
+  
 
 Please send bug reports, patches, help requests, fan letters, and/or angry rants to jim [@t] jdbirch.com.
 

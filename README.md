@@ -5,6 +5,9 @@ The approach is to divide the boat's track into segments where the heading is re
 
 This software is a hobby project that I've made available under the GNU GPL version 2.0. It is provided WITHOUT WARRANTY and is probably absolutely loaded with potentially dangerous bugs (I am a biologist after all). Feel free to copy, distribute, or modify the code to your own ends under the terms of the version 2.0 of the GNU GPL. Please see the attached LICENSE file for more information. If you use this software in your own work, please consider dropping me a citation!
 
+Some notes on how this software works:
+My study involved surveying an inland waterway with a Humminbird 598ci HD fishfinder. This unit was chosen largely because it is side scanning (side imaging to borrow the manufacturer's parlance) and was the smallest available unit at the time (it was often portaged or run through rapids on a canoe or small aluminum boat, weight mattered). Depth and range are calculated in this unit using data hard-coded into the firmware allowing the user to select seawater or fresh water. The speed of sound for fresh water used by the manufacturer is (I believe) 1436 m/s. Per the manufacturer's specifications, the true RMS power output is 500 watts and the transducer package contains 2 455 khz "side-imaging" transducers (one per side), 1 200 khz high resolution "down-imaging" transducer, and 1 83 khz traditional fish finder transducer. I have configured this software to work with this specific unit in fresh water, but will include documentation on how to change these values at the end of this file.
+
 Using: 
 This software runs on the command line and outputs (a ton of) files directly to the folder it is run from. I recommend making a new folder to hold these files and running sonargridder from inside that folder. From the command line:
 

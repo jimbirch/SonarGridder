@@ -142,6 +142,38 @@ Installing:
 #################################################################################################################
 #################################################################################################################
 
+Opening files in QGIS:
+
+QGIS manages the rotation, stretching, and placement of the tiff files based on the (.tfw) world file automatically. Because the default representation of TIFF files is rectangular without rotation, parts of the rectangle containing the file that do not contain data in the file will be filled with the level 0. This can be corrected using the transparency values for the layer. Since there are many TIFF files, I recommend navigating to the folder they are stored in using the QGIS browser. Each file can be double clicked to add them to the map. If, like me, you didn't stop recording between transects you will have to be careful about memory use (my laptop has 24 gb, and can still be brought down if too many are visible at a time).
+
+1. Create a new map in WGS84 (EPSG:4326)
+2. Figure out which line numbers are part of your transect (if you output the boat's path, this can be done by loading it up as a comma-separated text file using WGS84).
+3. In the QGIS browser, double click each TIFF file with line numbers within the transect to add it to the map.
+4. Select all of the raster layers you just added.
+5. Right click and select "Add Layers to Group."
+6. Rename the group appropriately.
+7. Select the first layer in the group and double click on it.
+8. On the symbology tab, change the min value to 10 and the max to 255.
+9. Click the + button to the right of the custom transparency panel.
+10. Change the fields of the new transparency setting to From: 0, To: 1, Percent Transparent: 100.
+11. Click the + button to the right of the custom transparency panel again.
+12. Change the fields of the new transparency setting to From: 2, To: 255, Percent Transparent: 0.
+13. Right click on the first layer in the group and right click on it. Navigate to the "Styles" submenu and select "Copy Style".
+14. Right click on the group and select "Paste Style" from the menu.
+15. Right click on the group and select "Set Group CRS" from the menu.
+16. Select WGS84 (EPSG:4326) and click OK.
+17. You can repeat for each transect, but I recommend unchecking each group that you are not working on and saving often. Memory will likely be an issue here.
+18. After all of the transects are added and their group CRSs are set to WGS84, you can change the project CRS as desired.
+19. Exporting each group as a layer definition is strongly recommended.
+
+shipPath.csv is extremely useful for identifying the start and end lines of each transect, and can be used to interpolate a depth map. This file can be imported as a comma delimited file. The x field is longitude and y field is latitude. CRS should be selected as WGS84 (EPSG:4326).
+
+Happy classifying!
+  
+#################################################################################################################
+#################################################################################################################
+#################################################################################################################
+
 Changing SONAR parameters:
 
 All parameters relevant to the analysis being done are provided as macros in the header file (songridder.h). Change these before compiling the software to change how the analysis is done. I have divided the macros into three sections consisting of physical constraints, properties of the down imaging transducer (this is only important for the extremely experimental E1 and E2 analysis included that I have not yet documented), and properties of the file.

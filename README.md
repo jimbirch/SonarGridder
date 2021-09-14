@@ -9,14 +9,21 @@ Using:
 This software runs on the command line and outputs (a ton of) files directly to the folder it is run from. I recommend making a new folder to hold these files and running sonargridder from inside that folder. From the command line:
 
 Synopsis: 
+
   sonargridder [filename] [transducer] [options]
+  
 Filename:
+
   The .SON file from a recording. On my unit (Humminbird 598ci HD), port side files are typically B002.SON while starboard side files are typically B003.SON.
   
-Transducer:
-  The transducer whose output corresponds to the file, should be starboard or port (all lowercase). See filename for typical filenames for each side.
   
+Transducer:
+
+  The transducer whose output corresponds to the file, should be starboard or port (all lowercase). See filename for typical filenames for each side.
+
+
 Options:
+
   -notiff or -nt: Disable georeferenced TIFF output
   
   -nopath or -np: Disable CSV output of the ship's path
@@ -27,7 +34,9 @@ Options:
   
   -min [number]: Specify the minimum number of scans to include in a TIFF file (default 10). Must be greater than 1. Files with fewer scans than specified (due to frequent direction changes or broad turns for example) will not be output.
   
+
 Example:
+
   sonargridder B002.SON port -a 2000 -max 300 -min 10
   
     Will output TIFF files with a maximum vertical resolution of 300 and minimum vertical resolution of 10 for the port side recording. Heading changes of less than 30° will be ignored.
@@ -36,47 +45,72 @@ Example:
   
     Will output TIFF files with a maximum vertical resolution of 200 and minimum vertical resolution of 2 for the starboard side recording. Heading changes of less than 20° will be ignored.
     
+
 Outputs:
+
   All coordinates are given in (roughly) WGS84 (EPSG:4326)
   
   [Port/Starboard]_lines[start]to[end].tif : 
+  
     vanilla (ungeoreferenced) tiff files containing the scans from the start to the end of a block.
     
   [Port/Starboard]_lines[start]to[end].tfw :
+  
     World files (text) georeferencing the tif files of the corresponding name, allowing a suitable GIS program to stretch and rotate the tiff files into place.
     
   shipPath.csv :
+  
     A csv file containing the latitude and longitude of each scan, as well as the depth.
     
+
 Suggested workflow:
+
   Managing files will be easier if you create a new folder for the program's output. For example:
+  
     mkdir Lake\ Superior\ Transect\ 1\ Starboard
     cd Lake\ Superior\ Transect\ 1\ Starboard
     cp ../B003.SON ./
     sonargridder B003.SON starboard -nopath -a 100 -max 200
 
+
 Building:
+
   Pre-requisites: This code requires only libtiff. If it is not installed, please install it first. In ubuntu:
     sudo apt-get install libtiff-dev
     
   1. Download the repository.
+
   2. Move into the src directory
+ 
      cd src
+     
   3. If necessary change LD_LIBRARY_PATH in the makefile to the path for libtiff (the path included is valid in the Ubuntu 20.04 x86-64 distribution I'm working from)
+  
      find /usr -name tiffio.h
+     
      sed -i "s+/usr/include/x86-64-linux-gnu+[location of tiffio.h]+g"
+     
   4. Build the program
+ 
      make
   
   The program will be output to ../bin
-  
+
+
 Installing:
+
   I've included an install directive in the Makefile that will dump the binary into /usr/local/bin (and an uninstall directive that will remove it). I'm not sure I'd recommend this course of action, but if you want to do it:
+  
   sudo make install
   
+  
   Alternatively (suggested) if you want to keep it local or don't have root access, make a folder to add to $PATH and copy the binary file there:
+  
   1. mkdir ~/bin (if it doesn't exist)
+  
   2. cp ../bin/sonargridder ~/bin/
+  
   3. export PATH=$PATH:~/bin
 
-  Alternatively add the bin folder from the repository to your PATH variable.
+  
+  Alternatively alternatively add the bin folder from the repository to your PATH variable.

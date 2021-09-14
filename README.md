@@ -11,7 +11,7 @@ This software is a hobby project that I've made available under the GNU GPL vers
   
   -Or-
   
-  Jim Birch (2020). SonarGridder: A utility for georeferencing commercial side-scan sonar files. JDBirch.com. URL https://www.jdbirch.com/.
+  Jim Birch (2021). SonarGridder: A utility for georeferencing commercial side-scan sonar files. JDBirch.com. URL https://www.jdbirch.com/.
   
 
 Please send bug reports, patches, help requests, fan letters, and/or angry rants to jim [@t] jdbirch.com.

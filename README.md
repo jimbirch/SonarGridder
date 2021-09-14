@@ -5,12 +5,12 @@ The approach is to divide the boat's track into segments where the heading is re
 
 This software is a hobby project that I've made available under the GNU GPL version 2.0. It is provided WITHOUT WARRANTY and is probably absolutely loaded with potentially dangerous bugs (I am a biologist after all). Feel free to copy, distribute, or modify the code to your own ends under the terms of the version 2.0 of the GNU GPL. Please see the attached LICENSE file for more information. If you use this software in your own work, please consider dropping me a citation!
 
-########################################################################################################################
+##################################################################################################################
 
 Some notes on how this software works:
 My study involved surveying an inland waterway with a Humminbird 598ci HD fishfinder. This unit was chosen largely because it is side scanning (side imaging to borrow the manufacturer's parlance) and was the smallest available unit at the time (it was often portaged or run through rapids on a canoe or small aluminum boat, weight mattered). Depth and range are calculated in this unit using data hard-coded into the firmware allowing the user to select seawater or fresh water. The speed of sound for fresh water used by the manufacturer is (I believe) 1436 m/s. Per the manufacturer's specifications, the true RMS power output is 500 watts and the transducer package contains 2 455 khz "side-imaging" transducers (one per side), 1 200 khz high resolution "down-imaging" transducer, and 1 83 khz traditional fish finder transducer. I have configured this software to work with this specific unit in fresh water, but will include documentation on how to change these values at the end of this file.
 
-########################################################################################################################
+##################################################################################################################
 
 Using:
 
@@ -70,7 +70,7 @@ Outputs:
   
     A csv file containing the latitude and longitude of each scan, as well as the depth.
     
-########################################################################################################################
+##################################################################################################################
 
 Suggested workflow:
 
@@ -81,7 +81,7 @@ Suggested workflow:
     cp ../B003.SON ./
     sonargridder B003.SON starboard -nopath -a 100 -max 200
 
-########################################################################################################################
+##################################################################################################################
 
 Building:
 
@@ -106,7 +106,7 @@ Building:
   
   The program will be output to ../bin
 
-########################################################################################################################
+##################################################################################################################
 
 Installing:
 
@@ -126,15 +126,15 @@ Installing:
   
   Alternatively alternatively add the bin folder from the repository to your PATH variable.
   
-########################################################################################################################
-########################################################################################################################
-########################################################################################################################
+##################################################################################################################
+##################################################################################################################
+##################################################################################################################
 
 Changing SONAR parameters:
 
 All parameters relevant to the analysis being done are provided as macros in the header file (songridder.h). Change these before compiling the software to change how the analysis is done. I have divided the macros into three sections consisting of physical constraints, properties of the down imaging transducer (this is only important for the extremely experimental E1 and E2 analysis included that I have not yet documented), and properties of the file.
 
-########################################################################################################################
+##################################################################################################################
 
 To change to seawater:
 
@@ -147,8 +147,10 @@ Changing to a non-firmware-specified speed of sound is beyond the scope of this 
   Dc = (D1 * Fs / C1) / (Fs / C2)
   
   Where D1 is the depth reported by the unit, C1 is the speed of sound used by the unit, C2 is the actual speed of sound, and Dc is the corrected depth.
+  
+Once these changes have been made, recompile the program (make clean && make).
 
-########################################################################################################################
+##################################################################################################################
 
 To change to a different unit:
 

@@ -1,0 +1,139 @@
+# SonarGridder
+© 2021 Angular Fish
+
+A C++ utility for simple georeferencing of Humminbird side scan sonar files. Intended for visual substrate classification using side scan sonar records and a GIS program of your choice. Outputs (regular) TIFF files with world files indicating how to stretch and rotate them onto the map. Corrects cross-track distance and poor gps resolution. Tested with the Humminbird 598ci HD, will likely work with other units of the same generation but may require some modification to the header to adjust the sonar header length and the offsets of particular important sonar header values. TIFF files import into QGIS without difficulty, I have not tested them with any other software.
+
+###############################################################################
+###############################################################################
+###############################################################################
+
+This software runs on the command line and outputs (a ton of) files directly to the folder it is run from. I recommend making a new folder to hold these files and running sonargridder from inside that folder. From the command line:
+
+Synopsis: 
+
+  sonargridder [filename] [transducer] [options]
+  
+Filename:
+
+  The .SON file from a recording. On my unit (Humminbird 598ci HD), port side files are typically B002.SON while starboard side files are typically B003.SON.
+  
+  
+Transducer:
+
+  The transducer whose output corresponds to the file, should be starboard or port (all lowercase). See filename for typical filenames for each side.
+
+
+Options:
+
+  -notiff or -nt: Disable georeferenced TIFF output
+  
+  -nopath or -np: Disable CSV output of the ship's path
+  
+  -a [number]: Specify the maximum heading change in tenths of a degree (default 100).
+  
+  -max [number]: Specify the maximum number of scans to include in a TIFF file (default 100).
+  
+  -min [number]: Specify the minimum number of scans to include in a TIFF file (default 10). Must be greater than 1. Files with fewer scans than specified (due to frequent direction changes or broad turns for example) will not be output.
+  
+
+Example:
+
+  sonargridder B002.SON port -a 2000 -max 300 -min 10
+  
+    Will output TIFF files with a maximum vertical resolution of 300 and minimum vertical resolution of 10 for the port side recording. Heading changes of less than 30° will be ignored.
+    
+  sonargridder B003.SON starboard -nopath -a 100 -max 200 -min 2
+  
+    Will output TIFF files with a maximum vertical resolution of 200 and minimum vertical resolution of 2 for the starboard side recording. Heading changes of less than 20° will be ignored.
+    
+
+Outputs:
+
+  All coordinates are given in (roughly) WGS84 (EPSG:4326)
+  
+  [Port/Starboard]_lines[start]to[end].tif : 
+  
+    vanilla (ungeoreferenced) tiff files containing the scans from the start to the end of a block.
+    
+  [Port/Starboard]_lines[start]to[end].tfw :
+  
+    World files (text) georeferencing the tif files of the corresponding name, allowing a suitable GIS program to stretch and rotate the tiff files into place.
+    
+  shipPath.csv :
+  
+    A csv file containing the latitude and longitude of each scan, as well as the depth.
+    
+###############################################################################
+
+Suggested workflow:
+
+  Managing files will be easier if you create a new folder for the program's output. For example:
+  
+    mkdir LakeSuperiorTransect01Starboard
+    cd LakeSuperiorTransect01Starboard
+    cp ../B003.SON ./
+    sonargridder B003.SON starboard -nopath -a 100 -max 200
+
+###############################################################################
+###############################################################################
+###############################################################################
+###############################################################################
+
+Opening files in QGIS:
+
+QGIS manages the rotation, stretching, and placement of the tiff files based on the (.tfw) world file automatically. Because the default representation of TIFF files is rectangular without rotation, parts of the rectangle containing the file that do not contain data in the file will be filled with the level 0. This can be corrected using the transparency values for the layer. Since there are many TIFF files, I recommend navigating to the folder they are stored in using the QGIS browser. Each file can be double clicked to add them to the map. If, like me, you didn't stop recording between transects you will have to be careful about memory use (my laptop has 24 gb, and can still be brought down if too many are visible at a time).
+
+1. Create a new map in WGS84 (EPSG:4326)
+2. Figure out which line numbers are part of your transect (if you output the boat's path, this can be done by loading it up as a comma-separated text file using WGS84).
+3. In the QGIS browser, double click each TIFF file with line numbers within the transect to add it to the map.
+4. Select all of the raster layers you just added.
+5. Right click and select "Add Layers to Group."
+6. Rename the group appropriately.
+7. Select the first layer in the group and double click on it.
+8. On the symbology tab, change the min value to 10 and the max to 255.
+9. Click the + button to the right of the custom transparency panel.
+10. Change the fields of the new transparency setting to From: 0, To: 1, Percent Transparent: 100.
+11. Click the + button to the right of the custom transparency panel again.
+12. Change the fields of the new transparency setting to From: 2, To: 255, Percent Transparent: 0.
+13. Right click on the first layer in the group and right click on it. Navigate to the "Styles" submenu and select "Copy Style".
+14. Right click on the group and select "Paste Style" from the menu.
+15. Right click on the group and select "Set Group CRS" from the menu.
+16. Select WGS84 (EPSG:4326) and click OK.
+17. You can repeat for each transect, but I recommend unchecking each group that you are not working on and saving often. Memory will likely be an issue here.
+18. After all of the transects are added and their group CRSs are set to WGS84, you can change the project CRS as desired.
+19. Exporting each group as a layer definition is strongly recommended.
+
+shipPath.csv is extremely useful for identifying the start and end lines of each transect, and can be used to interpolate a depth map. This file can be imported as a comma delimited file. The x field is longitude and y field is latitude. CRS should be selected as WGS84 (EPSG:4326).
+
+Happy classifying!
+
+###############################################################################
+###############################################################################
+###############################################################################
+
+Side scan basics and sources of error:
+
+Side-scan sonar works by using a beam forming transducer which produces a wave front that spreads in a flat, fan-shaped pattern away from the transducer. This could be visualised as a two-dimensional circle expanding from the transducer at the speed of sound. When parts of the wave front hit the bottom, they are reflected and part of the backscatter is directed toward the transducer. The wave front will reach areas of the bottom closer to the boat first, and their returns will also travel a shorter distance to reach the boat, so they arrive at the transducer first. The unit records the returns at regular intervals and then arranges these on screen to provide an image. There are a few things to note about this display, however: 
+1. Immediately apparent is the water column in the middle of the screen, where the sound wave has not reached the bottom yet, and
+2. The horizontal distances represent the distance from the boat, not the distance along the bottom—the return time is the hypotenuse of a right triangle, where one leg is the depth and the other leg is the distance along the bottom.
+
+This program removes the water column and corrects the distances to the distance along the bottom of each return. This carries one pretty weighty assumptions: that the bottom is flat. We only know the depth below the boat and the distance between the boat and the object making the return (with this unit, multibeam is a whole thing). Upward slopes and objects that stick up above the bottom will appear to be closer to the boat's track than they actually are; conversely, downward slopes will appear to be farther away.
+
+Other error sources are fairly obvious, but may bear repeating in this section:
+1. The unit calculates depth based on the speed of sound chosen apparently from one of two static values.
+2. The unit records its position in integer meters from a World Mercator projection, and pings multiple times per second. Because of this rounding, the unit stacks subesequent scans in the same location until the boat has moved far enough to update the GPS.
+3. The method this program uses for georeferencing assumes that all scans occurred at a regular interval as the boat traveled at a constant speed between two points. This addresses problem 2 above, but introduces a loss of spatial accuracy associated with the assumptions.
+4. The GPS takes a very long time to get a cold fix and it may not get one at all if the boat is moving before a fix has been achieved. Obviously, no GPS means no georeferencing.
+
+###############################################################################
+
+Surveying methods that help mitigate errors:
+
+1. Check the configuration of the unit—are you using it in fresh water or salt water? Is it set up accordingly?
+2. Start the unit at least several minutes before beginning the survey. It should be booted up and have a GPS fix before the boat begins to move, even if the survey doesn't start immediately. Drink a coffee maybe.
+3. Travel in a straight line at a constant speed, as slow as you can without sacrificing control authority.
+4. Read three again. Slow improves the along-track resolution but it is possible to be too slow. Is the boat drifting substantially from a straight-line course? You are going too slow.
+5. If possible survey perpendicular to depth contours. The flat bottom assumption is a doozy, but we only need local flatness in two dimesions. Going up or down a slope in the along track direction satisfies the assumption. Traveling along a channel does not.
+6. Keep turns relatively tight. The data you get during turns is close to useless. Minimize time spent turning.
+7. Set the unit to use its maximum side-imaging range and turn off auto ranging.
+  

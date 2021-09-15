@@ -1,30 +1,44 @@
 /*
-    sonargridder: A simple utility for mapping Humminbird SON files
-    Copyright © 2021 Angular Fish
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-    
-    This program is set up to work with files produced by the Humminbird 598ci HD
-    side imaging fishfinder (because that's what I have). The basic file
-    structure is the same between units, but the header lengths and locations
-    of metadata in the binary file may differ. Specs such as frequency and
-    wattage may also differ.
-
+╔══════════════════════════════════════════════════════════════════════════════╗
+║SonarGridder: A utility for georeferencing SON files                          ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║Copyright ©2021 Jim Birch (https://angularfish.net)                           ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║This program is free software; you can redistribute it and/or modify it under ║
+║the terms of the GNU General Public License as published by the Free Software ║
+║Foundation; either version 2 of the License, or (at your option) any later    ║
+║version.                                                                      ║
+║                                                                              ║
+║This program is a hobby project distributed in the hope that it will be useful║
+║but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY║
+║or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for   ║
+║more details.                                                                 ║
+║                                                                              ║
+║You should have received a copy of the GNU General Public License along with  ║
+║this program; if not, write to the Free Software Foundation, Inc., 51 Franklin║
+║Street, Fifth Floor, Boston, MA 02110-1301 USA.                               ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║Files:                                                                        ║
+║songridder.h: Physical metadata and file format macros, function prototypes   ║
+║main.cpp: Command line invocation, help                                       ║
+║processfiles.cpp: Common functions for all files used in the analysis         ║
+║sidescan.cpp: Functions for georeferencing sidescan files                     ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║Tested with data produced by a Humminbird 598ci HD manufactured circa 2014.   ║
+║May work with other units with or without modification. File format specific  ║
+║macros are defined in songridder.h. See README.md for more information. As    ║
+║originally packaged, data are processed as though they came from fresh water. ║
+║If used in salt water, SOUNDSPEED and SAMPLESPERMETER should be changed in    ║
+║songridder.h.                                                                 ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║Suggested citation:                                                           ║
+║Jim Birch (2021). SonarGridder: A utility for georeferencing consumer-grade   ║
+║side-scan sonar files. URL https://angularfish.net                            ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║Please let me know if you find this software useful! jim[át]jdbirch.com       ║
+║                 (Or if you can't get it to run at all)                       ║
+╚══════════════════════════════════════════════════════════════════════════════╝
 */
-
-
 
 #include "songridder.h"
 

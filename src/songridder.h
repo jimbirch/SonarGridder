@@ -1,29 +1,44 @@
 /*
-    sonargridder: A simple utility for mapping Humminbird SON files
-    Copyright © 2021 Angular Fish
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-    
-    This program is set up to work with files produced by the Humminbird 598ci HD
-    side imaging fishfinder (because that's what I have). The basic file
-    structure is the same between units, but the header lengths and locations
-    of metadata in the binary file may differ. Specs such as frequency and
-    wattage may also differ.
+╔══════════════════════════════════════════════════════════════════════════════╗
+║SonarGridder: A utility for georeferencing SON files                          ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║Copyright ©2021 Jim Birch (https://angularfish.net)                           ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║This program is free software; you can redistribute it and/or modify it under ║
+║the terms of the GNU General Public License as published by the Free Software ║
+║Foundation; either version 2 of the License, or (at your option) any later    ║
+║version.                                                                      ║
+║                                                                              ║
+║This program is a hobby project distributed in the hope that it will be useful║
+║but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY║
+║or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for   ║
+║more details.                                                                 ║
+║                                                                              ║
+║You should have received a copy of the GNU General Public License along with  ║
+║this program; if not, write to the Free Software Foundation, Inc., 51 Franklin║
+║Street, Fifth Floor, Boston, MA 02110-1301 USA.                               ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║Files:                                                                        ║
+║songridder.h: Physical metadata and file format macros, function prototypes   ║
+║main.cpp: Command line invocation, help                                       ║
+║processfiles.cpp: Common functions for all files used in the analysis         ║
+║sidescan.cpp: Functions for georeferencing sidescan files                     ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║Tested with data produced by a Humminbird 598ci HD manufactured circa 2014.   ║
+║May work with other units with or without modification. File format specific  ║
+║macros are defined in songridder.h. See README.md for more information. As    ║
+║originally packaged, data are processed as though they came from fresh water. ║
+║If used in salt water, SOUNDSPEED and SAMPLESPERMETER should be changed in    ║
+║songridder.h.                                                                 ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║Suggested citation:                                                           ║
+║Jim Birch (2021). SonarGridder: A utility for georeferencing consumer-grade   ║
+║side-scan sonar files. URL https://angularfish.net                            ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║Please let me know if you find this software useful! jim[át]jdbirch.com       ║
+║                 (Or if you can't get it to run at all)                       ║
+╚══════════════════════════════════════════════════════════════════════════════╝
 */
-
-
 
 #ifndef SONGRIDDER_H
 #define SONGRIDDER_H
@@ -40,32 +55,18 @@
 #include <time.h>
 
 // Physical constraints
-#define SOUNDSPEED 1463
-#define PI 3.141592654
-#define SAMPLESPERMETER 54.4245
-
-// Physical properties of the down imaging transducer
-#define FREQUENCY 200000
-#define NEARFIELDRANGE 0.05433008
-#define BEAM 20
-#define BEAMWIDTH 14.142135642
-#define EQUIVBEAM 0.034214216
-#define WAVELENGTH 0.007315
-#define ALPHA -43.036983702
-#define RETURNSTRENCOEFF 0.00761384
-#define MAXW 500
-#define ARRAYLENGTH 0.039872
-#define PINGDURATION 0.000085
-#define WAVENUMBER 858.945359945
-
+#define SOUNDSPEED 1463 // The speed of sound. Hardware encoded is 1463 in fresh
+#define PI 3.141592654  // water and 1500 in salt water (I think).
+#define SAMPLESPERMETER 54.4245 // Sample rate in Hertz divided by SOUNDSPEED
+#define DEPTHCORR 1 // If using a non-firmware specified SOUNDSPEED, this should
+                    // be changed (see README.md).
 // File properties
-#define LENPOS 62
-#define NORTHINGLOC 20
-#define EASTINGLOC 15
-#define DEPTHLOC 35
-#define HEADERLEN 67
-#define LENLOC 62
-#define HEADINGLOC 27
+#define LENLOC 62 // Ping (metadata) header offset of the sentence length
+#define NORTHINGLOC 20 // Ping header offset of the GPS northing variable
+#define EASTINGLOC 15 // Ping header offset of the GPS easting variable
+#define DEPTHLOC 35 // Ping header offset of the depth variable
+#define HEADERLEN 67 // Ping (metadata) header length, including start sequence
+#define HEADINGLOC 27 // Ping header offset of the GPS heading
 
 using namespace std;
 // File processing functions
@@ -84,19 +85,6 @@ double latitude(double northing);
 double getLatitude(unsigned char* line, int pos);
 double longitude(double easting);
 double getLongitude(unsigned char* line, int pos);
-// Down imaging functions
-double waterAttenuation(double H, double pH, int T, double S);
-double returnCoeff(unsigned char* line, int loc, double depth);
-double calcnoise(unsigned char* line, int end);
-double calcE(unsigned char* line, int start, int end, int echo1Start);
-
-double getDepth(uint32_t echos, uint8_t* flag);
-void getEchos(unsigned char* peaks, unsigned int* echos, unsigned char* line, 
-              uint32_t ll);
-void findPeaks(unsigned char* line, unsigned char* peaks, uint32_t ll, 
-               float sigma);
-void detectPeaks(unsigned char* line, unsigned char* peaks, uint32_t ll);
-bool e1e2File(string filename);
 // Side imaging functions
 void breakOnNoPosition(unsigned char* sonIn, bool* breaks, int lineCount);
 void breakOnDirectionChange(unsigned char* sonIn, bool* breaks, int lineCount,

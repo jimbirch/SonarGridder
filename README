@@ -5,7 +5,7 @@ SonarGridder: A utility for georeferencing consumer-grade, recreational side-sca
 ║ Table of Contents (text files in the root directory)                         ║
 ╟──────────────────────────────────────────────────────────────────────────────╢
 ║ README:  This file, basics on running the program                            ║
-║ BUILD:   Information on how to compile and install the program. Information  ║
+║ BUILDING:Information on how to compile and install the program. Information  ║
 ║          on how to modify the program to run under different conditions or   ║
 ║          with different sonar units.                                         ║
 ║ RUN:     Information on command line options for running the program.        ║

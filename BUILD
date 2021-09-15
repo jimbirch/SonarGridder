@@ -1,4 +1,4 @@
-# SonarGridder
+SonarGridder: A utility for georeferencing consumer-grade, recreational side scan sonar files.
 © 2021 Angular Fish
 
 A C++ utility for simple georeferencing of Humminbird side scan sonar files. Intended for visual substrate classification using side scan sonar records and a GIS program of your choice. Outputs (regular) TIFF files with world files indicating how to stretch and rotate them onto the map. Corrects cross-track distance and poor gps resolution. Tested with the Humminbird 598ci HD, will likely work with other units of the same generation but may require some modification to the header to adjust the sonar header length and the offsets of particular important sonar header values. TIFF files import into QGIS without difficulty, I have not tested them with any other software.

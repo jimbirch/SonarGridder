@@ -1,15 +1,15 @@
-# SonarGridder
-© 2021 Angular Fish
+SonarGridder: A utility for georeferencing consumer-grade, recreational side-scan sonar files.
+© 2021 Jim Birch (AngularFish.net)
 
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║ Table of Contents                                                            ║
 ╟──────────────────────────────────────────────────────────────────────────────╢
-║ README.md: This file, basics on running the program                          ║
-║ BUILD.md:  Information on how to compile and install the program. Information║
-║            on how to modify the program to run under different conditions or ║
-║            with different sonar units.                                       ║
-║ RUN.md:    Information on command line options for running the program.      ║
-║            Basics for GIS import of files and tips on how to run a survey.   ║
+║ README: This file, basics on running the program                             ║
+║ BUILD:  Information on how to compile and install the program. Information   ║
+║         on how to modify the program to run under different conditions or    ║
+║         with different sonar units.                                          ║
+║ RUN:    Information on command line options for running the program.         ║
+║         Basics for GIS import of files and tips on how to run a survey.      ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 A C++ utility for simple georeferencing of Humminbird side scan sonar files. Intended for visual substrate classification using side scan sonar records and a GIS program of your choice. Outputs (regular) TIFF files with world files indicating how to stretch and rotate them onto the map. Corrects cross-track distance and poor gps resolution. Tested with the Humminbird 598ci HD, will likely work with other units of the same generation but may require some modification to the header to adjust the sonar header length and the offsets of particular important sonar header values. TIFF files import into QGIS without difficulty, I have not tested them with any other software.

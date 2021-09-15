@@ -196,15 +196,15 @@ The unit's firmware uses the speed of sound to calculate the depth and range, an
 
 To change the software to seawater, SOUNDSPEED and SAMPLESPERMETER must be changed. The speed of sound used in fresh water is 1463 (m/s). I believe Humminbird uses 1500 (m/s) as the speed of sound in seawater (again, don't quote me on that). SAMPLESPERMETER corrects the sampling frequency to the distance and is defined as one over the length of each sample in seconds times the speed of sound (or the sampling rate in Hz divided by the speed of sound). Since the sampling frequency (likely constrained by some DAC on the device's mainboard) is undocumented, I determined this by taking the number of samples in a given line and dividing it by the specified range in my transect (50 m) to get 54.4245. This corresponds to a sampling rate of ~79.6 kHz (79623.0435 Hz) or a sample length of 12.56 μs (0.000012559 s). In seawater (1500 m/s) SAMPLESPERMETER would be 53.08278.
 
-Changing to a non-firmware-specified speed of sound is beyond the scope of this how-to, but can likely be accomplished by changing the SAMPLESPERMETER macro definition to what would be correct for the waterbody you are working in and adjusting the depth prior to using it in any of the functions. Depth would be adjusted as follows: 
+Changing to a non-firmware-specified speed of sound is beyond the scope of this how-to, but I have provided a macro to help adjust the depth to an alternate speed of sound. Change the SAMPLESPERMETER and SOUNDSPEED macro definitions to what would be correct for the waterbody you are working in and adjust the depth using the DEPTHCORR macro as follows: 
 
-  Dc = (D1 * Fs / C1) / (Fs / C2)
+  DEPTHCORR = (Fs / C1) / (Fs / C2)
   
   Where D1 is the depth reported by the unit, C1 is the speed of sound used by the unit, C2 is the actual speed of sound, Fs is the sampling frequency and Dc is the corrected depth.
   
   OR:
   
-  Dc = D1 * S1 / SAMPLESPERMETER
+  DEPTHCORR = S1 / SAMPLESPERMETER
   
   Where S1 is the SAMPLESPERMETER value corresponding with how the unit was configured by the operator. If seawater was selected, 53.0828; if fresh water was selected, 54.4245.
   

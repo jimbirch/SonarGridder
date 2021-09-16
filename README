@@ -11,6 +11,8 @@ SonarGridder: A utility for georeferencing consumer-grade, recreational side-sca
 ║ RUN:     Information on command line options for running the program.        ║
 ║          Basics for GIS import of files and tips on how to run a survey.     ║
 ║ LICENSE: The GNU GPL version 2.                                              ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║ EXPERIMENTAL: Information on building experimental analyses.                 ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 A C++ utility for simple georeferencing of Humminbird side scan sonar files. Intended for visual substrate classification using side scan sonar records and a GIS program of your choice. Outputs (regular) TIFF files with world files indicating how to stretch and rotate them onto the map. Corrects cross-track distance and poor gps resolution. Tested with the Humminbird 598ci HD, will likely work with other units of the same generation but may require some modification to the header to adjust the sonar header length and the offsets of particular important sonar header values. TIFF files import into QGIS without difficulty, I have not tested them with any other software.

@@ -312,17 +312,18 @@ bool generateTIFF(unsigned char* sonData, unsigned int* lineStarts, int lineLen,
   tfw << A << "\n" << B << "\n" << C << "\n" << D << "\n" << E << "\n" << F;
 
   // Housekeeping
+  tfw.close();
+  unsigned int corner1dist = abs(bottomRight[1] - topLeft[1]);
+  unsigned int corner2dist = abs(bottomRight[0] - topLeft[0]);
   delete[] topLeft;
   delete[] bottomRight;
-  tfw.close();
 
   // Send an error if the GPS screwed up. It happens a lot. The world file is still output
   // Maybe this shouldn't be the case.
-  if(abs(bottomRight[1] - topLeft[1]) > 1000 || abs(bottomRight[0] - topLeft[0]) > 1000) {
+  if(corner1dist > 1000 || corner2dist > 1000) {
     cout << "Error producing world file. ";
     return false;
   }
-
   return true;
 }
 
@@ -368,6 +369,7 @@ bool processSideScan (string filename, bool writeCSV, bool writeTIFF,
 
   int count = countLines(fileData, (int)size);
   bool* breaks = new bool[count];
+  for(int i = 0; i < count; i++) breaks[i] = false;
   breakOnDirectionChange(fileData, breaks, count, (uint32_t)tolerateAngle);
   breakOnNoPosition(fileData, breaks, count);
   breakOnMaxLines(breaks, count, maxLength);
@@ -398,20 +400,20 @@ bool processSideScan (string filename, bool writeCSV, bool writeTIFF,
     bool outputCSV = generateSideScanCSV(fileData, LineStarts, lineLen, 
                                          breakPoints[i], breakPoints[i+1], 
                                          port);
-    if(!outputCSV) {
-      cout << "Error outputting CSV for line: " << breakPoints[i];
-      cout << " to " << breakPoints[i+1] << "\n";
-    }
+    //if(!outputCSV) {
+     // cout << "Error outputting CSV for line: " << breakPoints[i];
+     // cout << " to " << breakPoints[i+1] << "\n";
+    //}
   }
 
   for(int i = 0; i < bpCurr - 1; i++) {
     if(!writeTIFF) break;
     bool outputTIFF = generateTIFF(fileData, LineStarts, lineLen, breakPoints[i],
                                    breakPoints[i+1], port, minLength);
-    if(!outputTIFF) {
-      cout << "Error outputting TIFF for line: " << breakPoints[i];
-      cout << " to " << breakPoints[i+1] << "\n";
-    }
+    //if(!outputTIFF) {
+     // cout << "Error outputting TIFF for line: " << breakPoints[i];
+     // cout << " to " << breakPoints[i+1] << "\n";
+    //}
   }
 
   if(pathAndDepth) {

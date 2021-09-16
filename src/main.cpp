@@ -41,14 +41,28 @@
 */
 
 #include "songridder.h"
+#ifdef EXPERIMENTAL
+#include "acousticanalysis.h"
+#endif
 
 void helpme() {
   cout << "SON Gridder v 0.1 by Angular Fish\n";
-  cout << "songridder <filename> <port|starboard> ";
+#ifdef EXPERIMENTAL
+  cout << "songridder <filename> <port|starboard|down> ";
   cout << "[-notiff|-nopath|-a 100|-max 100|-min 10]\n\n";
   cout << "Mandatory:\nfilename = a Humminbird .SON file\n";
-  cout << "Side: port or starboard\n";
+  cout << "type: port or starboard or down\n";
+  cout << "  For sidescan indicate port or starboard transducer. ";
+  cout << "For downward looking transducer type down.\n";
+  cout << "Optional (Sidescan only): \n";
+#endif
+#ifndef EXPERIMENTAL
+  cout << "sonargridder <filename> <port|starboard> ";
+  cout << "[-notiff|-nopath|-a 100|-max 100|-min 10]\n\n";
+  cout << "Mandator:\nfilename = a Humminbird .SON file\n";
+  cout << "type: port or starboard\n";
   cout << "Optional: \n";
+#endif
   cout << "-notiff -nt: Disable georeferenced TIFF output.\n";
   cout << "-nopath -np: Disable csv output of the ship's path.\n";
   cout << "-a [number]: Specify the maximum heading change in tenths of ";
@@ -82,42 +96,55 @@ int main (int argc, char **argv) {
     return 0;
   }
   
-  bool writeCSV = false;
-  bool writeTIFF = true;
-  bool pathAndDepth = true;
-  int tolerateAngle = 100;
-  int maxLength = 100;
-  int minLength = 10;
-  for(int i = 3; i < argc; i++) {
-    if(argv[i] == "-csv" || argv[i] == "-c") writeCSV = true;
-    else if(argv[i] == "-notiff" || argv[i] == "-nt") writeTIFF = false;
-    else if(argv[i] == "-nopath" || argv[i] == "-np") pathAndDepth = false;
-    else if(argv[i] == "-a") {
-      if(i + 1 >= argc) {
-        helpme();
-        return 0;
+  if(down) {
+#ifdef EXPERIMENTAL
+    bool e1e2 = e1e2File(filename);
+    if(!e1e2) {
+      cout << "Error outputting e1e2 file for " << filename << "\n";
+    }
+#endif
+#ifndef EXPERIMENTAL
+    helpme();
+    return 0;
+#endif
+  } else {
+    bool writeCSV = false;
+    bool writeTIFF = true;
+    bool pathAndDepth = true;
+    int tolerateAngle = 100;
+    int maxLength = 100;
+    int minLength = 10;
+    for(int i = 3; i < argc; i++) {
+      if(argv[i] == "-csv" || argv[i] == "-c") writeCSV = true;
+      else if(argv[i] == "-notiff" || argv[i] == "-nt") writeTIFF = false;
+      else if(argv[i] == "-nopath" || argv[i] == "-np") pathAndDepth = false;
+      else if(argv[i] == "-a") {
+        if(i + 1 >= argc) {
+          helpme();
+          return 0;
+        }
+        tolerateAngle = stoi(argv[i+1]);
+      }  else if(argv[i] == "-max") {
+        if(i + 1 >= argc) {
+          helpme();
+          return 0;
+        }
+        maxLength = stoi(argv[i+1]);
+      } else if(argv[i] == "-min") {
+        if(i + 1 >= argc) {
+          helpme();
+          return 0;
+        }
+        minLength = stoi(argv[i+1]);
       }
-      tolerateAngle = stoi(argv[i+1]);
-    }  else if(argv[i] == "-max") {
-      if(i + 1 >= argc) {
-        helpme();
-        return 0;
-      }
-      maxLength = stoi(argv[i+1]);
-    } else if(argv[i] == "-min") {
-      if(i + 1 >= argc) {
-        helpme();
-        return 0;
-      }
-      minLength = stoi(argv[i+1]);
+    }
+    bool sideScan = processSideScan(filename, writeCSV, writeTIFF, pathAndDepth,
+                                    tolerateAngle, maxLength, minLength, port);
+    if(!sideScan) {
+      cout << "Error outputting sidescan data for " << filename << "\n";
+      return 0;
     }
   }
-  bool sideScan = processSideScan(filename, writeCSV, writeTIFF, pathAndDepth,
-                                  tolerateAngle, maxLength, minLength, port);
-  if(!sideScan) {
-    cout << "Error outputting sidescan data for " << filename << "\n";
-    return 0;
-  }
+  
   return 0;
 }
-

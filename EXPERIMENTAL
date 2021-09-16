@@ -1,0 +1,360 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║     AcousticAnalysis: Extremely experimental and probably doesn't work.      ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║           Copyright ©2021 Jim Birch (https://angularfish.net)                ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║This program is free software; you can redistribute it and/or modify it under ║
+║the terms of the GNU General Public License as published by the Free Software ║
+║Foundation; either version 2 of the License, or (at your option) any later    ║
+║version. It's not required, but please let me know if you find this useful.   ║
+║                                                                              ║
+║This program is a hobby project distributed in the hope that it will be useful║
+║but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY║
+║or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for   ║
+║more details.                                                                 ║
+║                                                                              ║
+║You should have received a copy of the GNU General Public License along with  ║
+║this program; if not, write to the Free Software Foundation, Inc., 51 Franklin║
+║Street, Fifth Floor, Boston, MA 02110-1301 USA.                               ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║Welcome to the EXPERIMENTAL section. The analyses here are incomplete, buggy, ║
+║and generally not ready for prime time (as if anything else in this repo is). ║
+║If all you want to do is georeference some transects for visual classification║
+║turn back now. This isn't your final warning, but I'm not going to make a poi-║
+║n't to keep bringing it up. If you decide you want to try these analyses, see ║
+║the build section of this document for information on how to include it in yo-║
+║ur copy of my program. Also check the included analyses and maturity section  ║
+║to determine the suitability of this software for what you want to do. Lastly ║
+║I strongly encourage you to read the corresponding section describing the ana-║
+║lysis in this document. If you've heeded all of my warnings and still feel th-║
+║is is right for you, good luck! I hope you find this code helpful.            ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║This software is experimental, likely unreliable, probably full of bugs, and  ║
+║written by a biologist. It is likely to break my computer, break your compu-  ║
+║ter, do irreparable harm to your data, break off your relationships, or dial  ║
+║into a cold war-era nuclear weapons targeting system and force you to teach an║
+║aggressive AI how to play tic-tac-to to avert the extinction of humanity and  ║
+║every other living thing on this planet in an extended commentary on the futi-║
+║lity of preparing for nuclear war in the early 1980s.                         ║
+║                                                                              ║
+║Use this program at your own risk and back up your data often. Maybe run it on║
+║a machine you don't care about. I strongly recommend not running analyses in  ║
+║the same folder you store your original SON files in. Don't cry to me if you  ║
+║ruin your life using this code, but please file a bug report or otherwise let ║
+║me know about it.                                                             ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║You've read through two flowery warnings about using this software and are st-║
+║ill here because of course you are. You are the type of person who wants to do║
+║serious analysis using a fishfinder you bought for less than $500CAD. You are ║
+║either super low-budget, or like me you think a good study site is one where  ║
+║you get to shoot rapids a few times a day and this small unit is great for th-║
+║at. You're a risk taker and this is a challenge. Welcome again and I hope you ║
+║stay. This software is specifically written to analyze data from the Humminbi-║
+║rd 598ci HD combo side-imaging and down imaging fish finder, run in fresh     ║
+║water (a Canadian Shield river in my case). It can be modified to run in other║
+║(read: seawater) conditions or with other units. See the other text files in  ║
+║this folder for more information, and if you need help ask for help. I may not║
+║respond immediately, but I promise that if you've even bothered to download   ║
+║this repository I am extremely interested.                                    ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║                     EXPERIMENTAL ACOUSTIC ANALYSES                           ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║acousticanalysis.h:    Physical metadata for the down-imaging transducer,     ║
+║                       prototypes for acoustic analysis functions.            ║
+║acousticfunctions.cpp: Acoustic analysis functions and data processing.       ║
+║                       Details listed below.                                  ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║                    REQUIRED FILES FROM SONARGRIDDER                          ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║songridder.h:     Physical metadata and file format macros, function          ║
+║                  prototypes.                                                 ║
+║processfiles.cpp: Common functions for all files used in the analysis         ║
+║main.cpp:         Command line processing and help                            ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║Suggested citation:                                                           ║
+║Birch, J. 2021. SonarGridder: A utility for georeferencing consumer-grade side║
+║-scan sonar files. URL: https://angularfish.net                               ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║   Please let me know if you find this software useful! jim[á]jdbirch.com     ║
+║                 (Or if you can't get it to run at all)                       ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+################################################################################
+################################################################################
+################################################################################
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║Included analyses and their current maturity level:                           ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║1. Roughness and hardness analysis (E1 and E2):                               ║
+║   Sort of working. Doesn't use real units, water attenuation is not included,║
+║   relies on assumptions that may or may not be correct.                      ║
+║2. Peak detection and noise removal:                                          ║
+║   Works maybe 70% of the time. May not be necessary for analysis, depending  ║
+║   on how well the unit calculates depth.                                     ║
+║3. Automatic noise floor calculation:                                         ║
+║   Works reasonably well. There might be a compelling reason to not use it.   ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+################################################################################
+################################################################################
+################################################################################
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║Compiling the software with the experimental analyses included:               ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║Experimental analyses are built into the make file under the "experimental"   ║
+║target. Remove any previous builds. Update header files for salt water or to  ║
+║account for your specific unit as necessary (see BUILDING for more info)      ║
+║                                                                              ║
+║1. make clean                                                                 ║
+║2. make experimental                                                          ║
+║3. (optional) sudo make install                                               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+################################################################################
+################################################################################
+################################################################################
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║Roughness and hardness (E1 and E2):                                           ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║I would be remiss to not acknowledge that my motivation for attempting this   ║
+║analysis was based on my inability to get Dan Buscombe (dbuscombe.github.io)'s║
+║PyHum to run in the year of our lord 2021. Why Python needed to obsolete deca-║
+║des of other peoples' code is beyond the scope of this document. This code is ║
+║different from the E1 and E2 analysis in PyHum in several key ways, the ratio-║
+║nale for which I will include below. I also have no desire to recreate PyHum, ║
+║nor use a fully automatic method to classify substrate. If this is your goal  ║
+║more power to you, feel free to use my code in your project.                  ║
+║                                                                              ║
+║This analysis is not super complicated, and I'd recommend Dan Buscombe's 2017 ║
+║paper as well as Barb Faggetter's documentation at Oceanecology.ca as invalua-║
+║ble resources for understanding what is going on (citations below). Also I'd  ║
+║like to extend a huge thank you here to both of these folks for the huge      ║
+║amount of work that they have both done!                                      ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║E1 and E2 analysis is a method of using the strength of returns in the first  ║
+║and second sonar echos to classify substrate. The first echo is the direct ba-║
+║ckscatter from the substrate (ie the wave front has propagated from the trans-║
+║ducer to the bottom and reflected directly back). The second echo is the back-║
+║scatter from the bottom after the wave front has reflected off the bottom, re-║
+║flected off the surface, and then reflected off the bottom again.             ║
+║                                                                              ║
+║Researchers have noticed that the strength of the first echo roughly correspo-║
+║nds to the roughness of the substrate, and the second roughly corresponds to  ║
+║its reflectivity (hardness). There are reasons why this isn't always the case ║
+║but this is documentation and I'm a biologist. See the recommended reading for║
+║more info.                                                                    ║
+║                                                                              ║
+║Measuring the strength of each echo involves taking the area under the curve  ║
+║of these two peaks, and correcting them for water attenuation and noise. The  ║
+║units are an area over a volume (an inverse length), and are traditionally    ║
+║reported in inverse nautical miles. We won't worry about units here for a few ║
+║reasons, not the least of which being that surface and environmental conditio-║
+║ns affect results enough that literature-reported values are useless for clas-║
+║sification in most situations anyway. It is important to test these values ag-║
+║ainst known substrates in the system you are using them in.                   ║
+║                                                                              ║
+║Classification is typically accomplished using a clustering algorithm. Both   ║
+║Faggetter and Buscombe use k-means clustering and I think that is a solid opt-║
+║ion. I do no automatic clustering here so I'll leave that part up to you.     ║
+║                                                                              ║
+║Currently this software does not factor in water attenuation of the signal and║
+║assumes the returns reported by the instrument are logarithmic. Please see be-║
+║low for the missing information that is necessary to do this analysis right.  ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║Things we need to know to do this right but don't know. As far as I know      ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║1. What do the return values in the binary file correspond to? This is extrem-║
+║   ely important for factoring in water attenuation, which is expressed in the║
+║   equation I borrowed from Barb Faggetter in decibel watts. Buscombe (2017)  ║
+║   assumes that the maximum return (255) is equal to the power output from the║
+║   unit. I'm not going to call that assumption unreasonable, but I would not  ║
+║   design the instrument in this way. Further, returns of 255 are common even ║
+║   10+ m down. I think the assumption that 0 is no return is very reasonable. ║
+║   Faggetter represents return values in Sv, representing a variation in dyna-║
+║   mic range assumed to be 70dB. This may partially answer the next question. ║
+║2. Similarly, are the returns linear or logarithmic? I can think of a few ways║
+║   to set up an ADC to read amplitude, and assume that a direct measurement   ║
+║   from a DAC sampling at least twice as fast as the frequency (in this case  ║
+║   the DAC would need to be in the ballpark of 1 Mhz), would produce a linear ║
+║   response; but if the signal is rectified and used to charge a capacitor,   ║
+║   and then read by a slower ADC, the response would likely be logarithmic. I ║
+║   am assuming the response is logarithmic but am unwilling to disassemble my ║
+║   fishfinder to find out.                                                    ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║Problems that will always plague this analysis that I don't think can be fixed║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║1. Clipping. The return is expressed as an 8-bit unsigned integer. The energy ║
+║   responsible for the maximum return of 255 is unknown, but if it, as I susp-║
+║   ect, is lower than the output power, returns higher than 255 are probably  ║
+║   recorded as 255. The area under the curve of strong peaks in this analysis ║
+║   will always be underestimated in a way that is related to the number of re-║
+║   turns that are recorded as 255 but should be higher. This probably transla-║
+║   tes to unreliable results in shallow depths at an unknown depth cutoff tha-║
+║   t likely depends on substrate and the particular noise environment in the  ║
+║   study area.                                                                ║
+║2. Unknown variability between instruments. Signal strength and gain will vary║
+║   within manufacturing tolerences that we just don't know. I suspect they are║
+║   not super stringent considering that the intended use of this device is in-║
+║   situ visual interpretation in a recreational setting.                      ║
+║3. To my knowledge we don't know whether the instrument dynamically adjusts   ║
+║   its gain, output, or the duration of its pings. If it does any of these th-║
+║   ings and doesn't record the corresponding adjustments, there is no meaning-║
+║   ful way to compare the results of this analysis.                           ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║Suggested reading                                                             ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║Buscombe, D. 2017. Shallow water benthic imaging and substrate characterizati-║
+║ on using recreational-grade sidescan-sonar. Environmental Modelling and Soft-║
+║ ware. 89. pp 1-18                                                            ║
+║Faggetter, B. 46. Humminbird Raw Sonar Data. Accessed 2019-09-15              ║
+║ https://oceanecology.ca/publications/Humminbird%20Raw%Sonar%20Data.pdf       ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║Considerations if you decide to use this software for analysis                ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║1. You are using a recreational fish finder to do science. If you have the fu-║
+║   nding to not do this, please consider using it. An ADCP, multi-beam unit,  ║
+║   or properly calibrated, research-grade sonar unit that gives returns in dB ║
+║   Watts will keep you from pulling out your hair over the analysis 🙃.       ║
+║2. Currently water attenuation is not factored in to this analysis. This means║
+║   that E1 and E2 values will not scale correctly with depth. If your study   ║
+║   site has a relatively consistent depth, this might not matter (congrats you║
+║   lucky SOB). Otherwise you will need a way to include depth in your analysis║
+║   (bin similar depths before clustering, etc.)                               ║
+║3. Be comfortable with my assumptions, don't use this analysis, or modify the ║
+║   code to your own ends. I've given my rationale for the assumptions I've ma-║
+║   de, but the numbers will be wildly wrong if, for instance, returns are act-║
+║   ually linear. YMMV                                                         ║
+║4. Consider the first unresolvable problem: there is almost certainly a minim-║
+║   um depth that this analysis will work in and I can't tell you what it is.  ║
+║   You might be able to figure it out by looking at some lines to see the max-║
+║   imum return in the depth peak. I expect that the minimum useful depth is   ║
+║   the maximum depth at which values of 255 regularly occur in the depth peak.║
+║   You might be able to use a statistical method to correct for the clipping, ║
+║   though I don't know one offhand, or you might get away with running the an-║
+║   alysis anyway if your system has a relatively constant depth. Again YMMV   ║
+║5. The units reported by this software are non-standard and likely not report-║
+║   able in the literature without referencing how they were calculated.       ║
+║6. This is an extremely experimental program written by a fish biologist with ║
+║   too much free time during a global pandemic. If you find it useful, more   ║
+║   power to you. If it breaks your computer, c'est la vie. Back up your data  ║
+║   often, keep your coffee pot full, and be prepared for the unexpected.      ║
+║7. If you've read this far and you still want to give this a try. Godspeed.   ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║Offer of help and request for the same                                        ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║If you are doing/have done/are planning to do calibrations on this or a relat-║
+║ed instrument that could answer the big questions, please don't hesitate to   ║
+║contact me. My email is jim[á]jdbirch.com. I am willing to help with any anal-║
+║yses, including providing insight into the binary file format, loaning my ins-║
+║trument (provided you aren't looking to destroy it), providing data, or helpi-║
+║ng with fieldwork. I'm also willing to accept additional information if you   ║
+║just know it offhand, especially with a source!                               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+################################################################################
+################################################################################
+################################################################################
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║Peak detection and noise reduction:                                           ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║Finding and verifying depth is an important step for getting reliable data out║
+║of signal analyses. The unit does an internal calculation of depth that seems ║
+║reasonably reliable. I've included some functions for detecting peaks indepen-║
+║dently with the aim of creating a reliable method for determining the width of║
+║the return peaks. The procedure used by the peak detection function follows:  ║
+║                                                                              ║
+║1. Open a line (the returns associated with a single ping).                   ║
+║2. Compute a running average (μ) ending with the return being analyzed.       ║
+║3. If the return (r) was different from μ by A standard deviations (σ) classi-║
+║   fy the return as part of a peak. Record its location.                      ║
+║   D = r > μ + A * σ                                                          ║
+║   D = r < μ - A * σ                                                          ║
+║4. If the return was classified as a peak, reduce r toward the mean by 1/3.   ║
+║   r = 0.33 * (r0 - μ) + μ                                                    ║
+║   This increases the probability of classifying subsequent returns as part of║
+║   a peak and decreases noise in the original line for subsequent runs.       ║
+║5. Count the peaks, eliminating peaks too short to be anything other than noi-║
+║   se.                                                                        ║
+║6. If there are more than 5 or fewer than 2 peaks, repeat steps 2 through 5 at║
+║   a lower sigma level (A) until the conditions are met or A is 0.            ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║How I use this in the included analyses:                                      ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║A version of this analysis tuned to be somewhat more reliable than what I am  ║
+║currently doing could allow depth calculation independent of the unit's inter-║
+║nal calculation (read: fully user-specifiable speed of sound). It is also a   ║
+║starting point for the noise classification and peak width calculation detail-║
+║ed in the next section. Peak detection could also be helpful for automated cl-║
+║assification methods using the side-imaging transducers (shoreline detection, ║
+║rock detection, etc.). Noise reduction is also potentially helpful for image  ║
+║clarification in the side-imaging TIFFs, but is not currently used in this way║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+################################################################################
+################################################################################
+################################################################################
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║Automatic noise floor and peak width calculation:                             ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║Noise is calculated in two ways in this software. The noise used in calculati-║
+║ng E is, by definition, backscatter from the water column and is the average  ║
+║return prior to the peak corresponding the depth. Noise is also necesary for  ║
+║determining the breadth of the first two peaks. This noise floor is defined by║
+║the water column noise plus the continuous component of the backscatter from  ║
+║the bottom (the ringing caused by the wave front outside of the beam width and║
+║local echos between different parts of the substrate that return at unpredict-║
+║able times). Since the water column noise is part of these returns anyway, we ║
+║can ignore it for this algorithm. The ringing reduces over time, and the impo-║
+║rtant component is the space between the tail end of the first echo and the   ║
+║beginning of the second. This software calculates the noise floor using the   ║
+║following procedure:                                                          ║
+║                                                                              ║
+║1. Determine the location in the line of the peaks associated with both echos.║
+║2. Select a (roughly) 1 metre section of the line to sample for noise:        ║
+║   2a. If the second echo is more than 2 metres from the first, select the me-║
+║       re surrounding the midpoint between the two.                           ║
+║   2b. If the second echo is less than 2 metres from the first (the depth is  ║
+║       less than 2 metres), select a one-metre section of the line 1.5 metres ║
+║       after the second echo.                                                 ║
+║3. Scan through the selected noise region and calculate the average return.   ║
+║4. Set the noise floor ten percent higher than the average noise return. This ║
+║   is done to remove noise from the noise floor. lol                          ║
+║5. Adjust the peak widths so that they start and end with the first value     ║
+║   above the noise floor and the first value below the noise floor, respectiv-║
+║   ely.                                                                       ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║How I use this in the included analyses:                                      ║
+╟──────────────────────────────────────────────────────────────────────────────╢
+║The breadth of a return is an important component in calculating the area und-║
+║er the curve (E1 or E2). Buscombe (2017) circumvents this calculation by defi-║
+║ning the echos using the geometry of the transducer. Whether or not this is a ║
+║reliable method of comparison is beyond the scope of my knowledge. Faggetter  ║
+║uses the height of the signal over the noise floor (as I've detailed here) as ║
+║a method for determining the breadth of the peak. I favour this method as it  ║
+║is not dependent on defining the geometry of the wave-front (using specs from ║
+║the instrument that aren't to my knowledge publicly documented). It also fact-║
+║ors in the entire peak.                                                       ║
+║                                                                              ║
+║I'm not sure if this noise floor should be the noise subtracted from the area ║
+║under the curve in lieu of the water column noise when calculating E1 or E2. I║
+║will leave this to the experts. If you are an expert, please let me know.     ║
+║                                                                              ║
+║The noise floor calculation used here may be useful in correcting the drop-off║
+║in side-imaging returns associated with attenuation or as a way of calculating║
+║water attenuation in a sneaky way that relates it directly to the recorded re-║
+║turn strength, without needing to know the maximum return. I need to do some  ║
+║thinking about this, hit the literature, or be told. If you know, please cons-║
+║ider sharing your knowledge with me!                                          ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+################################################################################
+################################################################################
+################################################################################
+
+More to come! (Maybe)
+Jim Birch, 2021-09-16

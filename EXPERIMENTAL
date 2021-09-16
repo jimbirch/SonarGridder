@@ -274,7 +274,7 @@
 ║   D = r > μ + A * σ                                                          ║
 ║   D = r < μ - A * σ                                                          ║
 ║4. If the return was classified as a peak, reduce r toward the mean by 1/3.   ║
-║   r = 0.33 * (r0 - μ) + μ                                                    ║
+║   r = 0.67 * (r0 - μ) + μ                                                    ║
 ║   This increases the probability of classifying subsequent returns as part of║
 ║   a peak and decreases noise in the original line for subsequent runs.       ║
 ║5. Count the peaks, eliminating peaks too short to be anything other than noi-║

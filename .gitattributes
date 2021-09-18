@@ -3,4 +3,4 @@
 *.md linguist-generated=false
 *.md linguist-documentation=false
 *.md linguist-detectable=true
-
+README.md liguist-detectable=false

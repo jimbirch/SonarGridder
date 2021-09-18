@@ -404,20 +404,20 @@ bool processSideScan (string filename, bool writeCSV, bool writeTIFF,
     bool outputCSV = generateSideScanCSV("", fileData, LineStarts, lineLen, 
                                          breakPoints[i], breakPoints[i+1], 
                                          port);
-    //if(!outputCSV) {
-     // cout << "Error outputting CSV for line: " << breakPoints[i];
-     // cout << " to " << breakPoints[i+1] << "\n";
-    //}
+    if(!outputCSV) {
+      cout << "Error outputting CSV for line: " << breakPoints[i];
+      cout << " to " << breakPoints[i+1] << "\n";
+    }
   }
 
   for(int i = 0; i < bpCurr - 1; i++) {
     if(!writeTIFF) break;
     bool outputTIFF = generateTIFF("", fileData, LineStarts, lineLen, breakPoints[i],
                                    breakPoints[i+1], port, minLength);
-    //if(!outputTIFF) {
-     // cout << "Error outputting TIFF for line: " << breakPoints[i];
-     // cout << " to " << breakPoints[i+1] << "\n";
-    //}
+    if(!outputTIFF) {
+      cout << "Error outputting TIFF for line: " << breakPoints[i];
+      cout << " to " << breakPoints[i+1] << "\n";
+    }
   }
 
   if(pathAndDepth) {

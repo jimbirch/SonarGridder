@@ -107,22 +107,22 @@ class MainWindow : public Gtk::Window {
     std::string savefolder;
     Glib::RefPtr<Gtk::TextBuffer> text_buffer;
     // Signal handlers
-    void on_button_start();
-    void on_button_configure();
-    void on_button_open();
     void on_combo_changed();
+    void on_button_start();
+    void on_button_open();
+    void on_button_configure();
     void update_settings();
     // Other functions
+    std::string open_dialog(std::string title_text, Gtk::FileChooserAction opensave);
     void add_text(Glib::ustring newtext);
     void run_sidescan();
-    std::string open_dialog(std::string title_text, Gtk::FileChooserAction opensave);
     // Widgets
     Gtk::ComboBoxText combo_side;
     Gtk::Box main_layout, bottom_buttons, console;
     Gtk::Grid settings;
     Gtk::ProgressBar operation_progress;
     Gtk::TextView program_output;
-    Gtk::Button button_start, button_open, button_settings, button_update, button_cancel;
+    Gtk::Button button_start, button_open, button_settings, button_update;
     Gtk::Dialog dialog_settings;
     Gtk::ScrolledWindow console_window;
     // Settings dialog

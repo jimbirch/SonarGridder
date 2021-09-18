@@ -78,11 +78,13 @@ void breakOnDirectionChange (unsigned char* sonIn, bool* breaks, int lineCount,
                             sonIn[lenPos + 2], sonIn[lenPos + 3]);
     direction = decodeInteger(0, 0,  sonIn[directionPos], sonIn[directionPos + 1]);
     // Correct direction to eliminate zero crossings
-    if(direction < directionChange) direction += 3600;
-    if(direction + directionChange > 3600) direction -= 3600;
+    // if(direction < directionChange) direction += 3600;
+    // if(direction + directionChange > 3600) direction -= 3600;
+    direction += 3600;
+    uint32_t difference = abs((int)direction - (int)initialDirection);
+    if(difference > 3600) difference -= 3600;
     // Determine if we need a break point
-    if(direction > initialDirection + directionChange || 
-      direction < initialDirection - directionChange) {
+    if(difference > directionChange) {
       breaks[i] = true;
       initialDirection = direction;
     }
@@ -118,13 +120,13 @@ void distanceAcrossTrack(int* distance, unsigned int lineLen, unsigned int depth
   }
 }
 
-bool generateSideScanCSV(unsigned char* sonData, unsigned int* lineStarts, int lineLen, 
+bool generateSideScanCSV(string path, unsigned char* sonData, unsigned int* lineStarts, int lineLen, 
                 int startLine, int endLine, bool port) {
   // Generates a CSV file containing the coordinates and return strength of each sample.
   if(startLine + 1 == endLine) return false;
   string side = "Starboard";
   if(port) side = "Port";
-  ofstream csv(side + "_lines" + to_string(startLine) + "to" + to_string(endLine) + ".csv");
+  ofstream csv(path + side + "_lines" + to_string(startLine) + "to" + to_string(endLine) + ".csv");
   if(!csv.is_open()) return false;
   csv.precision(11);
   double startLocs[2][2];
@@ -165,13 +167,14 @@ bool generateSideScanCSV(unsigned char* sonData, unsigned int* lineStarts, int l
   return true;
 }
 
-bool generateTIFF(unsigned char* sonData, unsigned int* lineStarts, int lineLen, 
+bool generateTIFF(std::string path, unsigned char* sonData, unsigned int* lineStarts, int lineLen, 
                 int startLine, int endLine, bool port, int minSize) {
   // Generates a tiff file and georeferences it using a world file.
   if(startLine >= endLine - minSize) return false;
   string side = "Starboard";
   if(port) side = "Port";
   stringstream fname;
+  fname << path;
   fname << side << "_lines" << setw(8) << setfill('0') << startLine << "to";
   fname << setw(8) << setfill('0') << endLine;
   string filename = fname.str() + ".tif";
@@ -234,6 +237,7 @@ bool generateTIFF(unsigned char* sonData, unsigned int* lineStarts, int lineLen,
   delete[] line;
   delete[] tiffLine;
   delete[] distance;
+  (void)TIFFFlushData(out);
   (void)TIFFClose(out);
 
   // Build world file
@@ -327,10 +331,10 @@ bool generateTIFF(unsigned char* sonData, unsigned int* lineStarts, int lineLen,
   return true;
 }
 
-bool boatPathCSV(unsigned char* sonData, unsigned int* lineStarts, int count) {
+bool boatPathCSV(std::string path, unsigned char* sonData, unsigned int* lineStarts, int count) {
   // Writes a CSV containing the boat's location and the depth from each ping.
   // Useful for checking the output and doing bathymetry work.
-  ofstream csv("shipPath.csv");
+  ofstream csv(path + "shipPath.csv");
   if(!csv.is_open()) return false;
   csv.setf(ios_base::fixed);
   csv.precision(20);
@@ -397,7 +401,7 @@ bool processSideScan (string filename, bool writeCSV, bool writeTIFF,
 
   for(int i = 0; i < bpCurr - 1; i++) {
     if(!writeCSV) break;
-    bool outputCSV = generateSideScanCSV(fileData, LineStarts, lineLen, 
+    bool outputCSV = generateSideScanCSV("", fileData, LineStarts, lineLen, 
                                          breakPoints[i], breakPoints[i+1], 
                                          port);
     //if(!outputCSV) {
@@ -408,7 +412,7 @@ bool processSideScan (string filename, bool writeCSV, bool writeTIFF,
 
   for(int i = 0; i < bpCurr - 1; i++) {
     if(!writeTIFF) break;
-    bool outputTIFF = generateTIFF(fileData, LineStarts, lineLen, breakPoints[i],
+    bool outputTIFF = generateTIFF("", fileData, LineStarts, lineLen, breakPoints[i],
                                    breakPoints[i+1], port, minLength);
     //if(!outputTIFF) {
      // cout << "Error outputting TIFF for line: " << breakPoints[i];
@@ -417,7 +421,7 @@ bool processSideScan (string filename, bool writeCSV, bool writeTIFF,
   }
 
   if(pathAndDepth) {
-    bool boatPath = boatPathCSV(fileData, LineStarts, count);
+    bool boatPath = boatPathCSV("", fileData, LineStarts, count);
     if(!boatPath) cout << "Error outputting boat path.\n";
   }
   

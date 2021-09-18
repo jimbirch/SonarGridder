@@ -91,13 +91,13 @@ void breakOnDirectionChange(unsigned char* sonIn, bool* breaks, int lineCount,
                             unsigned int directionChange);
 void breakOnMaxLines(bool* breaks, int lineCount, int maxLines);
 void distanceAcrossTrack(int* distance, unsigned int lineLen, unsigned int depth);
-bool generateSideScanCSV(unsigned char* sonData, unsigned int* lineStarts, int lineLen,
+bool generateSideScanCSV(std::string path, unsigned char* sonData, unsigned int* lineStarts, int lineLen,
                          int startLine, int endLine, bool port);
-bool generateTIFF(unsigned char* sonData, unsigned int* lineStarts,
+bool generateTIFF(std::string path, unsigned char* sonData, unsigned int* lineStarts,
                   int lineLen, int startLine, int endLine, bool port,
                   int minSize);
-bool boatPathCSV(unsigned char* sonData, unsigned int* lineStarts, int count);
-bool processSideScan(string filename, bool writeCSV, bool writeTIFF,
+bool boatPathCSV(std::string path, unsigned char* sonData, unsigned int* lineStarts, int count);
+bool processSideScan(std::string filename, bool writeCSV, bool writeTIFF,
                      bool pathAndDepth, int tolerateAngle, int maxLength,
                      int minLength, bool port);
 #endif

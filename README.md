@@ -98,7 +98,6 @@ The steps are as follows:
 > Note that all TIFFs are laid out with the boat's first location at the top left and the end of the last scan at the bottom right, regardless of the direction of travel or side of the transducer. *Cross-track* distances are negative for the *Port Side* (left) transducer and positive for the *Starboard Side* (right) transducer, and the rotation in the world file is sufficient to flip the image over if the boat is travelling generally north instead of generally south.
 
 ### 1.5.1 A note on the flat bottom assumption:
-<<<<<<< HEAD
 
 As you probably noticed from my earlier description of these corrections, we are assuming that the distance of a *return bin* is the hypotenuse of a right triangle where one leg is the depth and the other the distance along the bottom. This is only true if the bottom is flat and level (if you recall, right triangles are made of three straight lines, two of which intersect at a right angle). Fancier units (read multi-beam) can correct for this, but you are using a *consumer-grade* fish finder to do research. Upward slopes and things projecting up from the bottom will appear closer than they actually are, whereas downward slopes will appear farther away. Although this assumption is two-dimensional, so if the bottom is locally flat and level within a single scan, it will generally be correct. 
 

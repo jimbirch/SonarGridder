@@ -69,11 +69,12 @@ MainWindow::MainWindow() : port(true),
                            writeCSV(false),
                            writeTIFF(true),
                            pathAndDepth(true),
+                           adjustDepths(1.0),
                            maxLines(300),
                            minLines(10),
                            angle(100),
                            soundspeed(1463),
-                           frequency_s(455000),
+                           correction_non_hardware(1.0),
                            frequency_d(200000),
                            main_layout(Gtk::ORIENTATION_VERTICAL),
                            bottom_buttons(Gtk::ORIENTATION_HORIZONTAL),
@@ -83,8 +84,8 @@ MainWindow::MainWindow() : port(true),
                            button_settings("Settings"),
                            button_update("Update"),
                            l_speed("Speed of Sound"),
-                           l_freq_s("Sidescan Frequency"),
-                           l_freq_d("Down Frequency"),
+                           l_freq_d("Down image Frequency"),
+                           l_salinity("Salinity Option"),
                            l_unit("Model"),
                            l_tiff_max("Maximum TIFF Scans"),
                            l_tiff_min("Minimum TIFF Scans"),
@@ -110,9 +111,13 @@ MainWindow::MainWindow() : port(true),
   combo_side.signal_changed().connect(
     sigc::mem_fun(*this,&MainWindow::on_combo_changed));
 
-  // Add the options for the combo box.
+  // Add the options for the combo boxes.
   combo_side.append("Port");
   combo_side.append("Starboard");
+  // Settings combo boxes
+  combo_salinity.append("Fresh water");
+  combo_salinity.append("Seawater");
+  c_unit.append("Humminbird 598ci HD");
 
   // Set up the scrolled window "console"
   console_window.add(console);
@@ -138,13 +143,14 @@ MainWindow::MainWindow() : port(true),
   // into the appropriate variables.
   button_update.signal_clicked().connect(
     sigc::mem_fun(*this,&MainWindow::update_settings));
-
+  combo_salinity.signal_changed().connect(
+    sigc::mem_fun(*this,&MainWindow::on_salinity_changed));
   // The settings dialog has a grid layout with two columns. The left contains
   // labels, and the right contains fields for editing the labeled variables.
   settings.attach(l_speed,0,0,1,1);
   settings.attach(e_speed,1,0,1,1);
-  settings.attach(l_freq_s,0,1,1,1);
-  settings.attach(e_freq_s,1,1,1,1);
+  settings.attach(l_salinity,0,1,1,1);
+  settings.attach(combo_salinity,1,1,1,1);
   settings.attach(l_freq_d,0,2,1,1);
   settings.attach(e_freq_d,1,2,1,1);
   settings.attach(l_unit,0,3,1,1);
@@ -193,6 +199,15 @@ MainWindow::MainWindow() : port(true),
 }
 
 MainWindow::~MainWindow() {
+}
+
+void MainWindow::on_salinity_changed() {
+// This function automatically sets the sound speed option to one of the two
+// firmware encoded options if the user changes the salinity. If they change
+// the sound speed again, the automatic depth adjustment should kick in.
+  Glib::ustring seawater = "Seawater";
+  if(combo_salinity.get_active_text() == seawater) e_speed.set_text("1500");
+  else e_speed.set_text("1463");
 }
 
 
@@ -274,7 +289,6 @@ void MainWindow::on_button_configure() {
   
   // Copy values for the settings from their appropriate variables
   e_speed.set_text(std::to_string(soundspeed));
-  e_freq_s.set_text(std::to_string(frequency_s));
   e_freq_d.set_text(std::to_string(frequency_d));
   e_tiff_max.set_text(std::to_string(maxLines));
   e_tiff_min.set_text(std::to_string(minLines));
@@ -283,7 +297,6 @@ void MainWindow::on_button_configure() {
   // an invocation or prayer than obvious change to how the data are handled.
   // certainly it still lets me type whatever I want and I don't know why.
   e_speed.set_input_purpose(Gtk::INPUT_PURPOSE_DIGITS);
-  e_freq_s.set_input_purpose(Gtk::INPUT_PURPOSE_DIGITS);
   e_freq_d.set_input_purpose(Gtk::INPUT_PURPOSE_DIGITS);
   e_tiff_max.set_input_purpose(Gtk::INPUT_PURPOSE_DIGITS);
   e_tiff_min.set_input_purpose(Gtk::INPUT_PURPOSE_DIGITS);
@@ -307,8 +320,7 @@ void MainWindow::update_settings() {
   minLines = (uint32_t)std::atoi(e_tiff_min.get_text().c_str());
   angle = (uint32_t)std::atoi(e_heading.get_text().c_str());
   soundspeed = (uint32_t)std::atoi(e_speed.get_text().c_str());
-  frequency_s = (uint32_t)std::atoi(e_freq_s.get_text().c_str());
-  frequency_d = (uint32_t)std::atoi(e_freq_s.get_text().c_str());
+  frequency_d = (uint32_t)std::atoi(e_freq_d.get_text().c_str());
 
   // The readback here is more for my own piece of mind than for the user, but
   // having a log of these settings is probably helpful. Maybe I should
@@ -326,7 +338,27 @@ void MainWindow::update_settings() {
   add_text(std::to_string(soundspeed));
   add_text(" metres per second.\n    Note: 1463 should be used for fresh water");
   add_text(" 1500 should be used for seawater.\n");
-  add_text("\n");
+  
+  Glib::ustring seawater = "Seawater";
+  Glib::ustring freshwater = "Fresh water";
+  // Warn the user if they are using a non-standard speed of sound
+  if(combo_salinity.get_active_text() == seawater &&
+     soundspeed != 1500) {
+    add_text("\nNon-standard speed of sound entered "); 
+    add_text("for seawater.\nFirmware specified speed of sound is 1500 m/s.");
+    add_text("\nThis is not an error. Depths and distances will be adjusted.");
+    add_text("\nIf you do not want depths and distances adjusted please use ");
+    add_text("1500 m/s\n\n");
+    adjustDepths = soundspeed / 1500.0;
+  } else if(combo_salinity.get_active_text() == freshwater &&
+            soundspeed != 1463) {
+    add_text("\nNon-standard speed of sound entered ");
+    add_text("for fresh water.\nFirmware specified speed of sound is 1463 m/s.");
+    add_text("\nThis is not an error. Depths and distances will be adjusted.");
+    add_text("\nIf you do not want depths and distances adjusted please use ");
+    add_text("1463 m/s\n\n");
+    adjustDepths = soundspeed / 1463.0;
+  } else adjustDepths = 1.0;
 
   // Disappear the settings window. Until next time, settings window.
   dialog_settings.hide();
@@ -415,6 +447,11 @@ void MainWindow::run_sidescan() {
 // It has been modified for the GUI by adding hooks for the progress bar and
 // and text console, as well as using this class's member variables instead of
 // taking arguments.
+
+  // Make the requested adjustments to the study constraints
+  speed_sound = soundspeed;
+  correction_depth = adjustDepths;
+  count_samples_meter = 76000 / soundspeed;
 
   // File stream objects
   streampos size;

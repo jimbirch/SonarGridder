@@ -68,7 +68,21 @@
 #define HEADERLEN 67 // Ping (metadata) header length, including start sequence
 #define HEADINGLOC 27 // Ping header offset of the GPS heading
 
-using namespace std;
+using namespace std; // I know. Bite me (:
+
+// Global variables are the easiest way for me to include user-changeable
+// constraints without rewriting a bunch of code.
+extern uint16_t speed_sound;
+extern double count_samples_meter;
+extern double correction_depth;
+
+extern uint8_t offset_sentence_length;
+extern uint8_t offset_depth;
+extern uint8_t offset_northing;
+extern uint8_t offset_easting;
+extern uint8_t offset_heading;
+extern uint8_t length_header;
+
 // File processing functions
 uint32_t decodeInteger(unsigned char byte0, unsigned char byte1, 
                        unsigned char byte2, unsigned char byte3);

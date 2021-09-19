@@ -71,9 +71,18 @@ void helpme() {
   cout << "csv file.\n";
   cout << "-min [number]: Specify the minimum number of scans in a tiff or ";
   cout << "csv file.\n";
+  cout << "-fresh: The unit was configured for fresh water. Speed of sound ";
+  cout << "was 1463 m/s\n";
+  cout << "-salt: The unit was configured for seawater. Speed of sound was ";
+  cout << "1500 m/s\n";
+  cout << "-mod-fresh [number]: The unit was configured for fresh water ";
+  cout << "but adjust distances for a speed of sound of [number] m/s\n";
+  cout << "-mod-salt [number]: The unit was configured for seawater but ";
+  cout << "adjust distances for a speed of sound of [number] m/s\n";
 }
 
 int main (int argc, char **argv) {
+
   if(argc < 3) {
     helpme();
     return 0;
@@ -136,8 +145,32 @@ int main (int argc, char **argv) {
           return 0;
         }
         minLength = stoi(argv[i+1]);
+      } else if(argv[i] == "-fresh") {
+        speed_sound = 1463;
+        count_samples_meter = 51.9481;
+        correction_depth = 1.0;
+      } else if(argv[i] == "-salt") {
+        speed_sound = 1500;
+        count_samples_meter = 50.6667;
+        correction_depth = 1.0;
+      } else if(argv[i] == "-mod-fresh") {
+        if(i + 1 >= argc) {
+          helpme();
+          return 0;
+        }
+        speed_sound = stoi(argv[i+1]);
+        count_samples_meter = 76000 / 1463;
+        correction_depth = speed_sound / 1463;
+      } else if(argv[i] == "-mod-salt") {
+        if(i + 1 >= argc) {
+          helpme();
+        }
+        speed_sound = stoi(argv[i+1]);
+        count_samples_meter = 76000 / 1500;
+        correction_depth = speed_sound / 1500;
       }
     }
+
     bool sideScan = processSideScan(filename, writeCSV, writeTIFF, pathAndDepth,
                                     tolerateAngle, maxLength, minLength, port);
     if(!sideScan) {

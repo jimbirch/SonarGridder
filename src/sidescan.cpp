@@ -28,7 +28,7 @@
 ║May work with other units with or without modification. File format specific  ║
 ║macros are defined in songridder.h. See README.md for more information. As    ║
 ║originally packaged, data are processed as though they came from fresh water. ║
-║If used in salt water, SOUNDSPEED and SAMPLESPERMETER should be changed in    ║
+║If used in salt water, SOUNDSPEED and count_samples_meter should be changed in    ║
 ║songridder.h.                                                                 ║
 ╟──────────────────────────────────────────────────────────────────────────────╢
 ║Suggested citation:                                                           ║
@@ -45,9 +45,9 @@
 void breakOnNoPosition (unsigned char* sonIn, bool* breaks, int lineCount) {
 // Updates the break point matrix to add scans that don't have a corresponding location.
 // This can happen if the GPS has no fix.
-  unsigned int eastingPos = EASTINGLOC;
-  unsigned int northingPos = NORTHINGLOC;
-  unsigned int lenPos = LENLOC;
+  unsigned int eastingPos = offset_easting;
+  unsigned int northingPos = offset_northing;
+  unsigned int lenPos = offset_sentence_length;
   uint32_t lineLen = 0;
   for(int i = 0; i < lineCount; i++) {
     lineLen = decodeInteger(sonIn[lenPos], sonIn[lenPos + 1],
@@ -58,9 +58,9 @@ void breakOnNoPosition (unsigned char* sonIn, bool* breaks, int lineCount) {
       cout << "No position for line number: " << i << ".\n";
       breaks[i] = true;
     }
-    lenPos = lenPos + HEADERLEN + lineLen;
-    eastingPos = eastingPos + HEADERLEN + lineLen;
-    northingPos = northingPos + HEADERLEN + lineLen;
+    lenPos = lenPos + length_header + lineLen;
+    eastingPos = eastingPos + length_header + lineLen;
+    northingPos = northingPos + length_header + lineLen;
   }
 }
 
@@ -68,9 +68,9 @@ void breakOnDirectionChange (unsigned char* sonIn, bool* breaks, int lineCount,
                              unsigned int directionChange) {
 // Updates the break point matrix to add scans where the direction changes, this prevents
 // Overlapping data.
-  unsigned int lenPos = LENLOC;
+  unsigned int lenPos = offset_sentence_length;
   unsigned int lineLen = 0;
-  unsigned int directionPos = HEADINGLOC;
+  unsigned int directionPos = offset_heading;
   uint32_t direction = 0;
   uint32_t initialDirection = 0;
   for(int i = 0; i < lineCount; i++) {
@@ -88,8 +88,8 @@ void breakOnDirectionChange (unsigned char* sonIn, bool* breaks, int lineCount,
       breaks[i] = true;
       initialDirection = direction;
     }
-    directionPos = directionPos + HEADERLEN + lineLen;
-    lenPos = lenPos + HEADERLEN + lineLen;
+    directionPos = directionPos + length_header + lineLen;
+    lenPos = lenPos + length_header + lineLen;
   }
 }
 
@@ -105,15 +105,16 @@ void breakOnMaxLines (bool* breaks, int lineCount, int maxLines) {
 }
 
 void distanceAcrossTrack(int* distance, unsigned int lineLen, unsigned int depth) {
-// Gets the across track distance for each reading in milimeters.
+// Gets the across track distance for each reading in bin lengths.
+  int depthBin = depth * count_samples_meter;
   for(unsigned int i = 0; i < lineLen; i++) {
-    if(i < HEADERLEN) {
+    if(i < length_header) {
       distance[i] = 0;
     } else {
-      unsigned int pingDist = (i - HEADERLEN) / SAMPLESPERMETER;
-      if(pingDist < depth + (HEADERLEN/SAMPLESPERMETER)) distance[i] = 0;
+      unsigned int pingDist = (i - length_header);
+      if(pingDist < depthBin + length_header) distance[i] = 0;
       else {
-        double dist = sqrt(pow(pingDist,2) - pow(depth,2));
+        double dist = sqrt(pow(pingDist,2) - pow(depthBin,2));
         distance[i] = int(dist);
       }
     }
@@ -133,10 +134,10 @@ bool generateSideScanCSV(string path, unsigned char* sonData, unsigned int* line
   unsigned char* line = new unsigned char[lineLen];
   int* distance = new int[lineLen];
   double* xy = new double[2];
-  startLocs[0][0] = decodeUTM(sonData,lineStarts[startLine] + NORTHINGLOC);
-  startLocs[0][1] = decodeUTM(sonData,lineStarts[startLine] + EASTINGLOC);
-  startLocs[1][0] = decodeUTM(sonData,lineStarts[endLine] + NORTHINGLOC);
-  startLocs[1][1] = decodeUTM(sonData,lineStarts[endLine] + EASTINGLOC);
+  startLocs[0][0] = decodeUTM(sonData,lineStarts[startLine] + offset_northing);
+  startLocs[0][1] = decodeUTM(sonData,lineStarts[startLine] + offset_easting);
+  startLocs[1][0] = decodeUTM(sonData,lineStarts[endLine] + offset_northing);
+  startLocs[1][1] = decodeUTM(sonData,lineStarts[endLine] + offset_easting);
   double slopeNorth = (startLocs[1][0] - startLocs[0][0])/(endLine - startLine);
   double slopeEast = (startLocs[1][1] - startLocs[0][1])/(endLine - startLine);
   csv << "LineNo,Depth(mm),SigStren,latitude,longitude,distance\n";
@@ -144,11 +145,12 @@ bool generateSideScanCSV(string path, unsigned char* sonData, unsigned int* line
     getLine(sonData, line, lineStarts[i], lineStarts[i+1]);
     double northing = startLocs[0][0] + slopeNorth * (i - startLine);
     double easting = startLocs[0][1] + slopeEast * (i - startLine);
-    int32_t direction = decodeDirection(line, HEADINGLOC);
-    int32_t depth = decodeDepth(line, DEPTHLOC) * 100;
+    int32_t direction = decodeDirection(line, offset_heading);
+    int32_t depth = decodeDepth(line, offset_depth) * 100;
     distanceAcrossTrack(distance, lineLen, depth);
-    for(int j = HEADERLEN + depth/SAMPLESPERMETER; j < lineLen; j++) {
-      pointLocation(distance[j], xy, (double)direction/10.0, northing, easting, port);
+    for(int j = length_header + depth/count_samples_meter; j < lineLen; j++) {
+      pointLocation(distance[j] / count_samples_meter, xy, 
+                    (double)direction/10.0, northing, easting, port);
       double longi = longitude(xy[1]);
       double lat = latitude(xy[0]);
       uint16_t sigStren = (uint16_t)line[j] & 255;
@@ -180,17 +182,19 @@ bool generateTIFF(std::string path, unsigned char* sonData, unsigned int* lineSt
   string filename = fname.str() + ".tif";
   int n = filename.length();
   char* filenameArray = new char[n+1];
+  double binLen = 1000 / count_samples_meter;
   strcpy(filenameArray, filename.c_str());
   TIFF *out = TIFFOpen(filenameArray,"w");
   delete[] filenameArray;
   uint32_t minDepth = 0xFFFF;
   for (int i = startLine; i < endLine; i++) {
-    uint32_t lineDepth = decodeDepth(sonData, lineStarts[i] + DEPTHLOC);
+    uint32_t lineDepth = decodeDepth(sonData, lineStarts[i] + offset_depth);
     if(lineDepth < minDepth) minDepth=lineDepth;
   }
-  minDepth *= 100;
-  int maxDist = (int)sqrt(pow((lineLen - HEADERLEN) * 19,2)-pow(minDepth,2));
-  TIFFSetField(out, TIFFTAG_IMAGEWIDTH, maxDist/19);
+  double minDepthBin = minDepth * count_samples_meter / 10;
+  int maxDist = (int)(sqrt(pow((lineLen - length_header),2)
+                          -pow(minDepthBin,2)) + 0.5);
+  TIFFSetField(out, TIFFTAG_IMAGEWIDTH, maxDist);
   TIFFSetField(out, TIFFTAG_IMAGELENGTH, endLine - startLine);
   TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL, 1);
   TIFFSetField(out, TIFFTAG_BITSPERSAMPLE, 8);
@@ -205,27 +209,30 @@ bool generateTIFF(std::string path, unsigned char* sonData, unsigned int* lineSt
   
   for(int i = startLine; i < endLine; i++) {
     getLine(sonData, line, lineStarts[i], lineStarts[i+1]);
-    uint32_t depth = decodeDepth(line, DEPTHLOC) * 100;
+    uint32_t depth = decodeDepth(line, offset_depth);
+    uint32_t depthBin = depth * count_samples_meter / 10;
     uint32_t currLineLen = lineStarts[i+1] - lineStarts[i];
-    unsigned int currLinePos = int(depth / 19) + HEADERLEN;
-    if(currLinePos >= currLineLen) continue;
-    distanceAcrossTrack(distance, lineLen, depth);
-    for(int j = 0; j < tiffLineLen; j++) {
-      if(j > HEADERLEN + maxDist/19) { 
-        tiffLine[j] = 0;
-        continue;
-      } 
-      else if(distance[currLinePos] > HEADERLEN + j * 19) {
-        tiffLine[j] = line[currLinePos];
-      }
-      else {
-        currLinePos++;
-        if(currLinePos >= currLineLen) {
-          currLinePos = currLineLen - 1;
-          tiffLine[j] = 0;
-          continue;
-        }
-        tiffLine[j] = line[currLinePos];
+    unsigned int currLinePos = depthBin + length_header;
+    if(currLinePos >= currLineLen) for(int j = 0; j < tiffLineLen; j++) tiffLine[j] = 0;
+    else {
+     distanceAcrossTrack(distance, currLineLen, depth);
+     for(int j = 0; j < tiffLineLen; j++) {
+       /*if(j > length_header + distance[currLineLen-1]) { 
+         tiffLine[j] = 0;
+       } 
+       else*/ // I don't think this actually did anything that wasn't done later
+       if(distance[currLinePos] > length_header + j) {
+         tiffLine[j] = line[currLinePos];
+       }
+       else {
+         currLinePos++;
+         if(currLinePos >= currLineLen) {
+           currLinePos = currLineLen - 1;
+           tiffLine[j] = 0;
+           continue;
+         }
+         tiffLine[j] = line[currLinePos];
+       }
       }
     }
     bool writeSuccess = TIFFWriteScanline(out,tiffLine,i-startLine,0);
@@ -253,12 +260,12 @@ bool generateTIFF(std::string path, unsigned char* sonData, unsigned int* lineSt
   double* bottomRight { new double[2] };
 
   // Find the location of the boat at the top left of our raster
-  topLeft[0] = decodeUTM(sonData, lineStarts[startLine] + NORTHINGLOC);
-  topLeft[1] = decodeUTM(sonData, lineStarts[startLine] + EASTINGLOC);
+  topLeft[0] = decodeUTM(sonData, lineStarts[startLine] + offset_northing);
+  topLeft[1] = decodeUTM(sonData, lineStarts[startLine] + offset_easting);
 
   // Find the location of the boat at the bottom (left) of our raster
-  bottomRight[0] = decodeUTM(sonData, lineStarts[endLine-1] + NORTHINGLOC);
-  bottomRight[1] = decodeUTM(sonData, lineStarts[endLine-1] + EASTINGLOC);
+  bottomRight[0] = decodeUTM(sonData, lineStarts[endLine-1] + offset_northing);
+  bottomRight[1] = decodeUTM(sonData, lineStarts[endLine-1] + offset_easting);
 
   // Determine the direction the boat was heading (so we can rotate)
   double direction = atan2((latitude(topLeft[0])-latitude(bottomRight[0])),
@@ -275,14 +282,14 @@ bool generateTIFF(std::string path, unsigned char* sonData, unsigned int* lineSt
   bottomRight[0] = latitude(topLeft[0]) + sqrt(pow(latitude(topLeft[0]) 
                    - latitude(bottomRight[0]),2) + pow(longitude(topLeft[1]) 
                    - longitude(bottomRight[1]),2)); // The y-location of the bottom right is
-                                                     // the latitude of the top left plus the
+                                                    // the latitude of the top left plus the
                                                     // distance travelled, calculated as the
                                                     // hypotenuse of the right triangle where
                                                     // Δlatitude and Δlongitude are the sides.
-
-  bottomRight[1] = topLeft[1] + maxDist * !port/1000 // The x-location of the bottom right
-                   - maxDist * port/1000;             // is the x-location of the top left plus
-                                                      // the maximum across-track distance.
+  double maxMeters = maxDist / count_samples_meter;
+  bottomRight[1] = topLeft[1] + int(maxMeters) * !port    // The x-location of the bottom right
+                   - int(maxMeters) * port;               // is the x-location of the top left plus
+                                                     // the maximum across-track distance.
                                                      // The across track distance is negative
                                                      // for the port transducer (it's on the
                                                      // left).
@@ -299,7 +306,7 @@ bool generateTIFF(std::string path, unsigned char* sonData, unsigned int* lineSt
   // where the pixels represent latitude and longitude as though the transect were in a 
   // perfectly north-south direction, and then rotate it with the ship's direction.
   double slopeY = (topLeft[0] - bottomRight[0])/(startLine - endLine);
-  double slopeX = (topLeft[1] - bottomRight[1])/(0 - maxDist/19); // These slopes relate latitude
+  double slopeX = (topLeft[1] - bottomRight[1])/(0 - maxDist); // These slopes relate latitude
                                                                   // and longitude to pixel locations.
 
   double F = topLeft[0]; // These are the intercepts. In the world file F is the Y location of 
@@ -340,9 +347,9 @@ bool boatPathCSV(std::string path, unsigned char* sonData, unsigned int* lineSta
   csv.precision(20);
   csv << "Number,Latitude,Longitude,Depth\n";
   for(int i = 0; i < count; i++) {
-    int easting = decodeUTM(sonData, lineStarts[i] + EASTINGLOC);
-    int northing = decodeUTM(sonData, lineStarts[i] + NORTHINGLOC);
-    float depth = decodeUTM(sonData, lineStarts[i] + DEPTHLOC)/10;
+    int easting = decodeUTM(sonData, lineStarts[i] + offset_easting);
+    int northing = decodeUTM(sonData, lineStarts[i] + offset_northing);
+    float depth = decodeUTM(sonData, lineStarts[i] + offset_depth)/10;
     double lat = latitude(northing);
     double lon = longitude(easting);
     csv << i << "," << lat << "," << lon << "," << depth << "\n";

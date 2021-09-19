@@ -97,16 +97,18 @@ class MainWindow : public Gtk::Window {
     bool writeCSV;
     bool writeTIFF;
     bool pathAndDepth;
+    double adjustDepths;
     uint32_t maxLines;
     uint32_t minLines;
     uint32_t angle;
     uint32_t soundspeed;
-    uint32_t frequency_s;
+    double correction_non_hardware;
     uint32_t frequency_d;
     std::string filename;
     std::string savefolder;
     Glib::RefPtr<Gtk::TextBuffer> text_buffer;
     // Signal handlers
+    void on_salinity_changed();
     void on_combo_changed();
     void on_button_start();
     void on_button_open();
@@ -117,7 +119,7 @@ class MainWindow : public Gtk::Window {
     void add_text(Glib::ustring newtext);
     void run_sidescan();
     // Widgets
-    Gtk::ComboBoxText combo_side;
+    Gtk::ComboBoxText combo_side, combo_salinity;
     Gtk::Box main_layout, bottom_buttons, console;
     Gtk::Grid settings;
     Gtk::ProgressBar operation_progress;
@@ -126,8 +128,8 @@ class MainWindow : public Gtk::Window {
     Gtk::Dialog dialog_settings;
     Gtk::ScrolledWindow console_window;
     // Settings dialog
-    Gtk::Label l_speed, l_freq_s, l_freq_d, l_unit, l_tiff_max, l_tiff_min, l_heading;
-    Gtk::Entry e_speed, e_freq_s, e_freq_d, e_tiff_max, e_tiff_min, e_heading;
+    Gtk::Label l_speed, l_freq_d, l_salinity, l_unit, l_tiff_max, l_tiff_min, l_heading;
+    Gtk::Entry e_speed, e_freq_d, e_tiff_max, e_tiff_min, e_heading;
     Gtk::ComboBoxText c_unit;
 };
 #endif

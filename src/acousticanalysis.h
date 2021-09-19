@@ -75,6 +75,15 @@
 
 
 using namespace std;
+
+// Make physical properties adjustable
+extern uint32_t dt_freq;
+extern double beam;
+extern double lambda;
+extern double coeff_return;
+extern uint16_t watts_max;
+extern double duration_ping;
+
 // Down imaging functions
 double waterAttenuation(double H, double pH, int T, double S);
 double returnCoeff(unsigned char* line, int loc, double depth);

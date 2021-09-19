@@ -42,6 +42,17 @@
 
 #include "songridder.h"
 
+// Global variables for all analyses
+uint16_t speed_sound = SOUNDSPEED;
+double count_samples_meter = SAMPLESPERMETER;
+double correction_depth = DEPTHCORR;
+uint8_t offset_depth = DEPTHLOC;
+uint8_t offset_sentence_length = LENLOC;
+uint8_t offset_northing = NORTHINGLOC;
+uint8_t offset_easting = EASTINGLOC;
+uint8_t offset_heading = HEADINGLOC;
+uint8_t length_header = HEADERLEN;
+
 uint32_t decodeInteger(unsigned char byte0, unsigned char byte1,
                        unsigned char byte2, unsigned char byte3) {
 // Takes four bytes and combines them into a 32 bit unsigned integer.
@@ -124,7 +135,7 @@ uint32_t decodeDepth(unsigned char* line, int pos) {
 // Finds the depth in a line or file.
   uint32_t depth = decodeInteger(line[pos], line[pos + 1], 
                                  line[pos + 2], line[pos + 3]);
-  depth *= DEPTHCORR;
+  depth = (uint32_t)((double)depth * correction_depth);
   return depth;
 }
 

@@ -58,12 +58,20 @@
 #include "songridder.h"
 #include "acousticanalysis.h"
 
+// Global variables
+uint32_t dt_freq = FREQUENCY;
+double beam = BEAM;
+double lambda = WAVELENGTH;
+double coeff_return = RETURNSTRENCOEFF;
+uint16_t watts_max = MAXW;
+double duration_ping = PINGDURATION;
+
 double waterAttenuation(double H, double pH, int T, double S) {
   //double H = depth;
-  int f = FREQUENCY / 1000;
-  double A1 = (8.86/SOUNDSPEED) * pow(10, 0.78 * pH -5);
+  int f = dt_freq / 1000;
+  double A1 = (8.86/speed_sound) * pow(10, 0.78 * pH -5);
   double f1 = 2.8 * sqrt(S/35) * pow(10, 4 - 1245/(T + 273));
-  double A2 = 21.44 * S * (1 + 0.025 * T) / SOUNDSPEED;
+  double A2 = 21.44 * S * (1 + 0.025 * T) / speed_sound;
   double A3 = 0.0003964 - 0.00001146 * T + 0.000000145 * pow(T, 2) 
               - 0.00000000065 * pow(T, 3);
   double f2 = 8.17 * pow(10, 8 - 1990/(T + 273)) / (1 + 0.0018 * (S - 35));
@@ -86,10 +94,10 @@ double calcnoise(unsigned char* line, int end) {
 // Calculates the noise (the average return energy in the water column part of
 // the the farfield region). Takes the line and the offset of the first location 
 // of the first echo. Returns the average noise energy.
-  if(end < HEADERLEN + 108) return 0;
-  int startSample = HEADERLEN + 108; 
-  double depth = (end - HEADERLEN) / SAMPLESPERMETER;
-  int endSample = HEADERLEN + (end - HEADERLEN) * 0.9;
+  if(end < length_header + 108) return 0;
+  int startSample = length_header + 108; 
+  double depth = (end - length_header) / count_samples_meter;
+  int endSample = length_header + (end - length_header) * 0.9;
   double coefficients = 0;
   for(int sample = startSample; sample < endSample; sample++) {
     coefficients += returnCoeff(line, sample, depth)/(endSample - startSample);
@@ -101,7 +109,7 @@ double calcE(unsigned char* line, int start, int end, int echo1Start) {
 // Calculates E1 or E2. Takes a line, a start offset, and an end offset for both
 // the peaks, as well as the start offset for the first echo. Returns the energy 
 // of the first (E1) or second (E2) echo.
-  double depth = (echo1Start - HEADERLEN) / SAMPLESPERMETER;
+  double depth = (echo1Start - length_header) / count_samples_meter;
   double E = 0;
   for(int sample = start; sample < end; sample++) {
     E += returnCoeff(line, sample, depth);
@@ -119,7 +127,7 @@ double getDepth(uint32_t* echos, uint8_t* flag) {
   // a flag variable. Returns a double of the depth in metres. Sets bit 3 of the flag
   // variable if the peaks aren't the main echos.
   uint32_t echo = echos[4];
-  double depth = (echo - HEADERLEN) / SAMPLESPERMETER;
+  double depth = (echo - length_header) / count_samples_meter;
   if(depth < 1 || depth > 200) *flag |= 0b00100000;
   return depth;
 }
@@ -129,13 +137,13 @@ void addDepthToPeaks(unsigned char* peaks, double depth, uint32_t ll,
   // Adds the region surrounding the unit's detected depth to the peaks.
   // Specify depth as a double in meters. Will mangle the peaks array to
   // include the depth peak.
-  unsigned int depthBin = HEADERLEN + depth * SAMPLESPERMETER;
-  unsigned int startSearch = HEADERLEN;
+  unsigned int depthBin = length_header + depth * count_samples_meter;
+  unsigned int startSearch = length_header;
   unsigned int endSearch = ll - 1;
-  if((depthBin - SAMPLESPERMETER) >= HEADERLEN) startSearch = 
-                                              depthBin - SAMPLESPERMETER;
+  if((depthBin - count_samples_meter) >= length_header) startSearch = 
+                                              depthBin - count_samples_meter;
   else *flag |= 0b00010000;
-  if((depthBin + SAMPLESPERMETER) < ll) endSearch = startSearch + SAMPLESPERMETER;
+  if((depthBin + count_samples_meter) < ll) endSearch = startSearch + count_samples_meter;
   else *flag |= 0b00001000;
   for(unsigned int i = startSearch; i < endSearch; i++) {
     peaks[i] = 0xFF;
@@ -153,7 +161,7 @@ void getEchos(unsigned char* peaks, unsigned int* echos, unsigned char* line,
   // Step 1: find the depth ping. We will consider this the highest return in a peak.
   uint8_t maxReturn = 0;
   unsigned int depthPing = 0;
-  for(unsigned int i = HEADERLEN + 27; i < ll; i++) {
+  for(unsigned int i = length_header + 27; i < ll; i++) {
     if(peaks[i] == 0xFF && line[i] > maxReturn) {
       maxReturn = line[i];
       depthPing = i;
@@ -164,9 +172,9 @@ void getEchos(unsigned char* peaks, unsigned int* echos, unsigned char* line,
   // highest return around double the distance from the first peak.
   maxReturn = 0;
   unsigned int secondPing = 0;
-  unsigned int startSearch = 1.8 * (depthPing - HEADERLEN) + HEADERLEN;
+  unsigned int startSearch = 1.8 * (depthPing - length_header) + length_header;
   if(startSearch >= ll) startSearch = ll - 11;
-  unsigned int endSearch = 2.2 * (depthPing - HEADERLEN) + HEADERLEN;
+  unsigned int endSearch = 2.2 * (depthPing - length_header) + length_header;
   if(endSearch - 10 < startSearch) endSearch += 10;
   if(endSearch >= ll) endSearch = ll - 2;
   for(unsigned int i = startSearch; i < endSearch; i++) {
@@ -182,7 +190,7 @@ void getEchos(unsigned char* peaks, unsigned int* echos, unsigned char* line,
   if(secondPing < depthPing + 336) incr = -1;
   endSearch = secondPing + 54 * incr;
   if(endSearch > ll-2) endSearch = ll-2;
-  else if(endSearch <= HEADERLEN) endSearch = HEADERLEN;
+  else if(endSearch <= length_header) endSearch = length_header;
   maxReturn = 255;
   unsigned int localMin = 0;
   for(unsigned int i = secondPing; i != endSearch; i += incr) {
@@ -197,7 +205,7 @@ void getEchos(unsigned char* peaks, unsigned int* echos, unsigned char* line,
   unsigned int noiseFloor = 0;
   endSearch = localMin + incr * 54;
   if(endSearch > ll - 2) endSearch = ll - 2;
-  else if(endSearch < HEADERLEN) endSearch = HEADERLEN;
+  else if(endSearch < length_header) endSearch = length_header;
   for(unsigned int i = localMin; i != endSearch; i += incr) {
     noiseFloor += line[i] / 54;
   }
@@ -207,11 +215,11 @@ void getEchos(unsigned char* peaks, unsigned int* echos, unsigned char* line,
   // floor.
   unsigned int depthPingStart = 0;
   endSearch = depthPing - 336;
-  if(depthPing < HEADERLEN + 336) endSearch = HEADERLEN;
+  if(depthPing < length_header + 336) endSearch = length_header;
   
   for(unsigned int i = depthPing; i >= endSearch; i--) {
-    if(i <= HEADERLEN) { 
-      depthPingStart = HEADERLEN;
+    if(i <= length_header) { 
+      depthPingStart = length_header;
       break;
     }
     else if(line[i] < noiseFloor) {
@@ -262,7 +270,7 @@ void getEchos(unsigned char* peaks, unsigned int* echos, unsigned char* line,
 
   // Flag if something weird happened.
   for(int i = 0; i < 5; i++) {
-    if((echos[i] < HEADERLEN) || (echos[i] > ll + 2)) *flag |= 0b10000000;
+    if((echos[i] < length_header) || (echos[i] > ll + 2)) *flag |= 0b10000000;
   }
   if(echos[0] <= echos[3]) *flag |= 0b01000000;
 }
@@ -278,7 +286,7 @@ void findPeaks(unsigned char* line, unsigned char* peaks, uint32_t ll, float sig
   // Step one: calculate a moving average over a ~25 cm distance for each sample in
   // the line. We start at 2 m to avoid noise caused by the boat. TODO: make this
   // user changeable.
-  for(unsigned int i = HEADERLEN + 108; i < ll; i++) {  
+  for(unsigned int i = length_header + 108; i < ll; i++) {  
     uint8_t mean = 0;
     for(unsigned int j = i - 13; j < i; j++) { // 13 ~ 25 cm in fresh water.
       mean += line[j]/13;
@@ -299,7 +307,7 @@ void findPeaks(unsigned char* line, unsigned char* peaks, uint32_t ll, float sig
     }
   } 
 
-  /*for(int i = ll - 14; i >= HEADERLEN + 108; i--) {
+  /*for(int i = ll - 14; i >= length_header + 108; i--) {
     uint8_t mean = 0;
     for(int j = i + 13; j > i; j--) {
       mean += line[j]/13;
@@ -442,8 +450,8 @@ bool e1e2File (string filename) {
   double E1 = calcE(line2, echo[2], echo[3], echo[2]);
   double E2 = calcE(line2, echo[0], echo[1], echo[2]);
   double attenuation = waterAttenuation(depth, 7, 25, 0);
-  double lat = getLatitude(line, NORTHINGLOC);
-  double lon = getLongitude(line, EASTINGLOC);
+  double lat = getLatitude(line, offset_northing);
+  double lon = getLongitude(line, offset_easting);
   ofstream lineCSV("line.csv");
   lineCSV << ",,,,,Scan number:," << midpoint << "\n";
   lineCSV << ",,,,,Latitude:," << lat << ",Longitude:," << lon << "\n";
@@ -460,9 +468,9 @@ bool e1e2File (string filename) {
   int j = 0;
 
   unsigned int guess = 0;
-  for(unsigned int i = HEADERLEN; i < beginnings[midpoint+1] - beginnings[midpoint] - 28; i++) {
-    if(i > HEADERLEN + 3) j = i + peaks[2]/7 + 13;
-    else j = i - HEADERLEN;
+  for(unsigned int i = length_header; i < beginnings[midpoint+1] - beginnings[midpoint] - 28; i++) {
+    if(i > length_header + 3) j = i + peaks[2]/7 + 13;
+    else j = i - length_header;
     if(((i >= echo[0]) && (i <= echo[1])) || 
        ((i >= echo[2]) && (i <= echo[3]))) guess = 0xFF;
     else guess = 0x00;
@@ -499,7 +507,7 @@ bool e1e2File (string filename) {
     }
     depth = getDepth(echo,&flag); // This may or may not be important. Leaning
                                   // toward not. Might help correct for
-                                  // variations in SOUNDSPEED though.
+                                  // variations in speed_sound though.
     if((flag & FLAGDEPTHNONSENSE) > 0) {
       depth = (double)decodeDepth(line, DEPTHLOC)/10;
       csv << "Depth update failed. ";
@@ -515,9 +523,9 @@ bool e1e2File (string filename) {
 
     
     csv << depth << ",";
-    double latitude = getLatitude(line, NORTHINGLOC);
+    double latitude = getLatitude(line, offset_northing);
     csv << fixed << setprecision(10) << latitude << ",";
-    double longitude = getLongitude(line, EASTINGLOC);
+    double longitude = getLongitude(line, offset_easting);
     csv << fixed << setprecision(10) << longitude << ",";
     double E1 = 0;
     if(calculateE1) E1 = calcE(line, echo[2], echo[3], echo[4]);

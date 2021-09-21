@@ -154,7 +154,9 @@ I've included some experimental signal analysis functions that are in their earl
 If you previously built the vanilla version, type `make clean` before starting.
 
 `make clean`
+
 `make experimental`
+
 `(optional) sudo make install`
 
 ## 2.5 GUI
@@ -162,7 +164,9 @@ If you previously built the vanilla version, type `make clean` before starting.
 I've included a Gtkmm-3.0 GUI for the vanilla functions. It was intended to be a simple wrapper on the command line version, but it adds some functionality that I actually find helpful. It is early days and very buggy. There is a make target for it, and one day I will learn how to use autotools. You will need Gtkmm-3.0 (this is not the latest version but it is what Ubuntu 20.04 had).
 
 `make clean`
+
 `make gui`
+
 `(optional) sudo make install`
 
 If your distro put libTIFF somewhere else, LD_LIBRARY_PATH flag to wherever you found it (see **2.2**).

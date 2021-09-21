@@ -169,7 +169,7 @@ I've included a Gtkmm-3.0 GUI for the vanilla functions. It was intended to be a
 
 `(optional) sudo make install`
 
-If your distro put libTIFF somewhere else, LD_LIBRARY_PATH flag to wherever you found it (see **2.2**).
+If your distro put libTIFF somewhere else, change LD_LIBRARY_PATH in the Makefile to wherever you found it (see **2.2**).
 
 # 3. Running
 
@@ -213,6 +213,7 @@ It is also necessary to specify whether the file corresponds to the *port* or *s
 Down-imaging files are B001.SON on my unit. B000.SON is the 83 kHz fish finder/depth finder transducer.
 
 One additional option exists:
+
 -guess-maxreturn: Calculate the maximum return strength of the transducer by comparing the maximum return of each scan with the calculated water attenuation at that depth. Will include water attenuation in analyses. *In practice, the current algorithm is only slightly better than a wild guess*
 
 ## 3.2 The GUI

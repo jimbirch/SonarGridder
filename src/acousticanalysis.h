@@ -96,6 +96,8 @@ void getEchos(unsigned char* peaks, unsigned int* echos, unsigned char* line,
 void findPeaks(unsigned char* line, unsigned char* peaks, uint32_t ll, 
                float sigma);
 void detectPeaks(unsigned char* line, unsigned char* peaks, uint32_t ll);
-bool e1e2File(string filename);
+double lineWattdBWCorr(unsigned char* line, uint32_t ll);
+double guessdBWCorr(unsigned char* file, uint32_t maxLL, unsigned int* lineStarts, uint32_t count);
+bool e1e2File(string filename, bool guessCoeff);
 #endif
 

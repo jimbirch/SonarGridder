@@ -67,9 +67,8 @@ uint16_t watts_max = MAXW;
 double duration_ping = PINGDURATION;
 
 double waterAttenuation(double H, double pH, int T, double S) {
-  //double H = depth;
   int f = dt_freq / 1000;
-  double A1 = (8.86/speed_sound) * pow(10, 0.78 * pH -5);
+  double A1 = (8.86/speed_sound) * pow(10, 0.78 * pH - 5);
   double f1 = 2.8 * sqrt(S/35) * pow(10, 4 - 1245/(T + 273));
   double A2 = 21.44 * S * (1 + 0.025 * T) / speed_sound;
   double A3 = 0.0003964 - 0.00001146 * T + 0.000000145 * pow(T, 2) 
@@ -80,13 +79,18 @@ double waterAttenuation(double H, double pH, int T, double S) {
   double alphaw = A1 * f1 * pow(f, 2) / (pow(f, 2) + pow(f1, 2))
                   + A2 * P2 * f2 * pow(f, 2)/(pow(f,2) + pow(f2, 2))
                   + A3 * P3 * pow(f, 2);
-  return alphaw;
+  return alphaw / 500;
 }
 
 double returnCoeff (unsigned char* line, int loc, double depth) {
-  double returnStrength = pow(10,line[loc]/255); // Linearizes the (presumed) 
-                                                 // logarithmic return strength
-                                                 // to a number between 1 and 10
+  double returnStrength = line[loc] + waterAttenuation(depth, 7.0, 25, 0.0) / 
+                          coeff_return; // Instead of correcting the return to 
+                                        // dB-W, we correct the attenuation to
+                                        // return units so that this can be 
+                                        // removed if necessary.
+  double returnStren = pow(10,returnStrength/255); // Linearizes the (presumed) 
+                                                   // logarithmic return strength
+                                                   // to a number between 1 and 10
   return returnStrength;
 }
 
@@ -393,7 +397,56 @@ void detectPeaks(unsigned char* line, unsigned char* peaks, uint32_t ll) {
   peaks[2] = (unsigned char) i + 2;
 }
 
-bool e1e2File (string filename) {
+double lineWattdBWCorr(unsigned char* line, uint32_t ll) {
+// Attempts to fit an individual line to a model of water attenuation to
+// make a stab at finding the conversion to decibel watts.
+  double correction = 1;
+  double depth = decodeDepth(line, offset_depth) / 10;
+  unsigned int binDepth = int(depth * count_samples_meter + length_header + 0.5);
+  if(ll < binDepth + 65 || length_header > binDepth - 65) return 0.0;
+  // Find the maximum return
+  uint8_t maxReturn = 0;
+  for(unsigned int i = binDepth - 65; i < binDepth + 65; i++) {
+    if(line[i] > maxReturn) maxReturn = line[i];
+  }
+  if(maxReturn == 255) return 0.0;
+
+  // Find the predicted attenuation
+  double atten = waterAttenuation(depth, 7.0, 25, 0.0);
+  double Rcorr = atten / (255 - maxReturn);
+  return Rcorr;
+}
+
+double guessdBWCorr(unsigned char* file, uint32_t maxLL, 
+                    unsigned int* lineStarts, uint32_t count) {
+// Makes a wild guess as to the correction to decibel watts. Not sure if it works
+  double sumdBWattCorr = 0;
+  unsigned int actualSamples = 0;
+  unsigned char* line = new unsigned char[maxLL];
+  for(uint32_t i = 0; i < maxLL; i++) line[i] = 0x00;
+  for(unsigned int i = 0; i < count - 1; i++) {
+    getLine(file, line, lineStarts[i], lineStarts[i+1]);
+    double received = lineWattdBWCorr(line, lineStarts[i+1] - lineStarts[i]);
+    if(received > 0.001) {
+      cout << "Received conversion: " << received << "\n";
+      sumdBWattCorr += received;
+      actualSamples++;
+    }
+  }
+  if(actualSamples < 1) {
+    cout << "decibel watts conversion failed.\n";
+    return 10000; // Return a number that removes water attenuation IFF failure
+  }
+  delete[] line;
+  double averageConversion = sumdBWattCorr / actualSamples;
+  double maxReturn = 255 * averageConversion;
+  cout << "Best guess for transducer saturation is: ";
+  cout << maxReturn << " dB-Watts\n";
+  cout << "Average conversion to dB-Watts is: " << averageConversion << "\n";
+  return averageConversion;
+}
+
+bool e1e2File (string filename, bool guessCoeff) {
   uint8_t flag = 0;
   char* sFileData;
   streampos size;
@@ -421,6 +474,10 @@ bool e1e2File (string filename) {
     unsigned int curLL = beginnings[i] - beginnings[i-1];
     if(curLL > maxLL) maxLL = curLL;
   }
+
+  // Guess the decibel watts conversion
+  if(guessCoeff) coeff_return = guessdBWCorr(fileData, maxLL, beginnings, count);
+  else coeff_return = 10000;
 
   // Output a line as its own csv file
   srand (time(NULL));
@@ -491,7 +548,6 @@ bool e1e2File (string filename) {
   for(unsigned int i = 0; i < count - 1; i++) {
     flag = 0;
     uint32_t ll = beginnings[i + 1] - beginnings[i];
-    csv << i << ",";
     getLine(fileData, line, beginnings[i], beginnings[i+1]);
     detectPeaks(line, peaks, ll);
     getLine(fileData, line, beginnings[i], beginnings[i+1]);
@@ -500,12 +556,12 @@ bool e1e2File (string filename) {
     getEchos(peaks, echo, line, ll, &flag);
     bool calculateE2 = true;
     bool calculateE1 = true;
+    bool calculateD = true;
     if((flag & FLAGECHOSFAILED) > 0) {
-      csv << "Echo finding failed," << depth << ",0,0,0,0\n";
-      calculateE2 = false;
-      calculateE1 = false;
+      continue;
     }
-    depth = getDepth(echo,&flag); // This may or may not be important. Leaning
+    csv << i << ",";
+    if(calculateD) depth = getDepth(echo,&flag); // This may or may not be important. Leaning
                                   // toward not. Might help correct for
                                   // variations in speed_sound though.
     if((flag & FLAGDEPTHNONSENSE) > 0) {

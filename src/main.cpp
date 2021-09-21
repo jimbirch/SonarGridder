@@ -52,9 +52,12 @@ void helpme() {
   cout << "[-notiff|-nopath|-a 100|-max 100|-min 10]\n\n";
   cout << "Mandatory:\nfilename = a Humminbird .SON file\n";
   cout << "type: port or starboard or down\n";
-  cout << "  For sidescan indicate port or starboard transducer. ";
+  cout << "  For side-scan indicate port or starboard transducer. ";
   cout << "For downward looking transducer type down.\n";
-  cout << "Optional (Sidescan only): \n";
+  cout << "Optional (Down imaging only):\n";
+  cout << "-guess-conversion: Guess the conversion from 8-bit return strength";
+  cout << " to decibel watts.\n";
+  cout << "Optional (side-scan only): \n";
 #endif
 #ifndef EXPERIMENTAL
   cout << "sonargridder <filename> <port|starboard> ";
@@ -107,7 +110,9 @@ int main (int argc, char **argv) {
   
   if(down) {
 #ifdef EXPERIMENTAL
-    bool e1e2 = e1e2File(filename);
+    bool guess = false;
+    if(argc > 3) guess = true;
+    bool e1e2 = e1e2File(filename, guess);
     if(!e1e2) {
       cout << "Error outputting e1e2 file for " << filename << "\n";
     }

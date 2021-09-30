@@ -54,7 +54,7 @@
 ║sidescan.cpp:     Code for georeferencing SON files.                          ║
 ║processfiles.cpp: Code for processing SON files.                              ║
 ╟──────────────────────────────────────────────────────────────────────────────╢
-║Tested with data produced by a Humminbird 598ci HD manufactured circa 2014.   ║
+║Tested with data produced by a Humminbird 698ci HD manufactured circa 2014.   ║
 ║May work with other units with or without modification.                       ║
 ╟──────────────────────────────────────────────────────────────────────────────╢
 ║   Please let me know if you find this software useful! jim[át]jdbirch.com    ║

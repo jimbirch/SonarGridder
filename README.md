@@ -32,7 +32,7 @@ Need help/have help/want to talk: jim[ä]jdbirch.com
 
 I am a fish biologist, with a motivating interest in fish habitat use. Circa 2014 I was a broke graduate student in a fishing supply store in a rural community in Canada. They had a Humminbird display with several units showing a running demonstration of side-scan imagery. I immediately went home, checked my bank account, and then drove back to the store and picked one up. Initially I used the unit for visual substrate classification in the boat while doing gillnet surveys, but I also have acoustic telemetry data and it sure would be cool to be able to reference that to side-scanning imagery.
 
-I went with the 598ci HD combo because it was the smallest. It was also the cheapest, but as near as I could tell at the time the primary difference between the units is their display size. I still use it. It has been intermittently screwed into the transom of small aluminum boats, duct-taped to canoes and kayaks, and even once screwed onto a pole and held firmly to the side of a zodiac by someone who definitely wasn't paid enough for this.
+I went with the 698ci HD combo because it was the smallest. It was also the cheapest, but as near as I could tell at the time the primary difference between the units is their display size. I still use it. It has been intermittently screwed into the transom of small aluminum boats, duct-taped to canoes and kayaks, and even once screwed onto a pole and held firmly to the side of a zodiac by someone who definitely wasn't paid enough for this.
 
 At the time there were few utilities for georeferencing side-scan files. Dan Buscombe's PyHum was in its infancy (and although it seemed cool, Python dependencies vexed me at the time). Barb Faggetter (Oceanecology.ca) had a great guide on using a utility called Son2Xtf to convert files into the extended triton format, and then georeference them with MB-System (MBARI: The Monterey Bay Aquarium Research Insitute, California, USA). I captured a fair amount of data, georeferenced it in this way, and a colleague validated the method using an epibenthic sled with a mounted camera at our study site.
 
@@ -183,7 +183,7 @@ The command line utility takes all options as command line arguments (there is n
 
 The filename is the name of a Humminbird .SON file. The unit outputs several other metadata files with other extensions but we don't use them here.
 
-It is also necessary to specify whether the file corresponds to the *port* or *starboard* transducer **in lowercase letters**. Based on some code comments in a python script I wrote circa 2015, the port side file from my device (a Humminbird 598ci HD combo) is usually titled B002.SON, and the starboard file is B003.SON. I don't know how universally true that is or where I got that information, but it seems to hold true for me.
+It is also necessary to specify whether the file corresponds to the *port* or *starboard* transducer **in lowercase letters**. Based on some code comments in a python script I wrote circa 2015, the port side file from my device (a Humminbird 698ci HD combo) is usually titled B002.SON, and the starboard file is B003.SON. I don't know how universally true that is or where I got that information, but it seems to hold true for me.
 
 **Options**
 
@@ -256,7 +256,7 @@ My QGIS workflow:
 
 ## 4.2 Planning a study using this method
 
-In theory this software should be able to handle any recording from the Humminbird 598ci HD combo, or similar units, possibly with modification. In practice it has only been used in a few situations. This section outlines some tips and pitfalls with the way studies are run that can influence the performance of this analysis.
+In theory this software should be able to handle any recording from the Humminbird 698ci HD combo, or similar units, possibly with modification. In practice it has only been used in a few situations. This section outlines some tips and pitfalls with the way studies are run that can influence the performance of this analysis.
 
 ### 4.2.1 Sonar Setup
 

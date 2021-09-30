@@ -24,7 +24,7 @@
 ║processfiles.cpp: Common functions for all files used in the analysis         ║
 ║sidescan.cpp: Functions for georeferencing sidescan files                     ║
 ╟──────────────────────────────────────────────────────────────────────────────╢
-║Tested with data produced by a Humminbird 598ci HD manufactured circa 2014.   ║
+║Tested with data produced by a Humminbird 698ci HD manufactured circa 2014.   ║
 ║May work with other units with or without modification. File format specific  ║
 ║macros are defined in songridder.h. See README.md for more information. As    ║
 ║originally packaged, data are processed as though they came from fresh water. ║

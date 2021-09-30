@@ -35,7 +35,7 @@
 ║Transducer. Some code based on descriptions of E1 and E2 analysis from Barb   ║
 ║Faggetter (Oceanecology.ca) and Dan Buscombe (dbuscombe-usgs.github.io).      ║
 ╟──────────────────────────────────────────────────────────────────────────────╢
-║Tested with data produced by a Humminbird 598ci HD manufactured circa 2014.   ║
+║Tested with data produced by a Humminbird 698ci HD manufactured circa 2014.   ║
 ║May work with other units with or without modification.                       ║
 ╟──────────────────────────────────────────────────────────────────────────────╢
 ║   Please let me know if you find this software useful! jim[át]jdbirch.com    ║

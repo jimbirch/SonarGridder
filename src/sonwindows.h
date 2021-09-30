@@ -117,6 +117,7 @@ class MainWindow : public Gtk::Window {
     // Other functions
     std::string open_dialog(std::string title_text, Gtk::FileChooserAction opensave);
     void add_text(Glib::ustring newtext);
+    void log_text();
     void run_sidescan();
     // Widgets
     Gtk::ComboBoxText combo_side, combo_salinity;

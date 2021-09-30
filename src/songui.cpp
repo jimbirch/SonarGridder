@@ -442,6 +442,12 @@ void MainWindow::add_text(Glib::ustring newtext) {
   adj->set_value(adj->get_upper());
 }
 
+void MainWindow::log_text() {
+  Gtk::TextIter end = text_buffer->end();
+  Gtk::TextIter start = text_buffer->begin();
+  text_buffer->erase(start, end);
+}
+
 void MainWindow::run_sidescan() {
 // This is effectively the same function as processSideScan in sidescan.cpp.
 // It has been modified for the GUI by adding hooks for the progress bar and
@@ -642,4 +648,5 @@ void MainWindow::run_sidescan() {
   add_text(" file:\n");
   add_text(filename);
   add_text("\n");
+  log_text();
 }

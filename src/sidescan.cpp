@@ -349,7 +349,7 @@ bool boatPathCSV(std::string path, unsigned char* sonData, unsigned int* lineSta
   for(int i = 0; i < count; i++) {
     int easting = decodeUTM(sonData, lineStarts[i] + offset_easting);
     int northing = decodeUTM(sonData, lineStarts[i] + offset_northing);
-    float depth = decodeUTM(sonData, lineStarts[i] + offset_depth)/10;
+    double depth = double(decodeUTM(sonData, lineStarts[i] + offset_depth))/10.0;
     double lat = latitude(northing);
     double lon = longitude(easting);
     csv << i << "," << lat << "," << lon << "," << depth << "\n";

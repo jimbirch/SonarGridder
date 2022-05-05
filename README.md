@@ -115,7 +115,7 @@ Enough with the preamble, you've downloaded this **open source** code from the *
 
 Start by cloning this repository (or download and extract the zip file):
 
-`git clone https://github.com/SonarGridder`
+`git clone https://github.com/jimbirch/SonarGridder`
 
 Then move into the src directory:
 
